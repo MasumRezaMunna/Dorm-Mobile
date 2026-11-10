@@ -1,24 +1,56 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "11/38 Home",
+    "slug": "dorm-solution",
     "version": "1.0.0",
+    "scheme": "home467",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.467home.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow 11/38 Home to access your camera to upload complaint images.",
+        "NSPhotoLibraryUsageDescription": "Allow 11/38 Home to access your photos to upload complaint images."
       }
     },
+    "android": {
+      "package": "com.home467.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow 11/38 Home to access your photos.",
+          "cameraPermission": "Allow 11/38 Home to access your camera."
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": []
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "28734682-471a-4717-8042-9be34ece33f7"
+      }
+    },
+    "owner": "masumrezamunnas-team"
   }
 }

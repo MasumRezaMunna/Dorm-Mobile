@@ -1,0 +1,4 @@
+/* NativeWind global stylesheet — imported in root _layout.jsx */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

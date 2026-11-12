@@ -7,35 +7,53 @@ const getCurrentMonthYear = () => {
   return { month: now.getMonth() + 1, year: now.getFullYear() };
 };
 
-export const useMemberDashboard = () => {
+/**
+ * Public Dorm Overview (Stats, Settings, Recent Notices, Today's Team)
+ */
+export const usePublicOverview = (month, year) => {
+  const current = getCurrentMonthYear();
+  const m = month || current.month;
+  const y = year || current.year;
+
   return useQuery({
-    queryKey: QUERY_KEYS.DASHBOARD_MEMBER,
+    queryKey: ['public', 'overview', m, y],
     queryFn: async () => {
-      const { month, year } = getCurrentMonthYear();
-      const { data } = await api.get(`/dashboard/member?month=${month}&year=${year}`);
+      const { data } = await api.get(`/public/overview?month=${m}&year=${y}`);
       return data.data;
     },
   });
 };
 
-export const useManagerDashboard = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.DASHBOARD_MANAGER,
-    queryFn: async () => {
-      const { month, year } = getCurrentMonthYear();
-      const { data } = await api.get(`/dashboard/manager?month=${month}&year=${year}`);
-      return data.data;
-    },
-  });
-};
+// Backwards-compatibility aliases
+export const useMemberDashboard = () => usePublicOverview();
+export const useManagerDashboard = () => usePublicOverview();
 
-export const useCommunityStats = () => {
+/**
+ * Public Community Transparency Stats (Members, Rooms, Meals, Paid)
+ */
+export const useCommunityStats = (month, year) => {
+  const current = getCurrentMonthYear();
+  const m = month || current.month;
+  const y = year || current.year;
+
   return useQuery({
-    queryKey: QUERY_KEYS.COMMUNITY,
+    queryKey: ['public', 'community', m, y],
     queryFn: async () => {
-      const { month, year } = getCurrentMonthYear();
-      const { data } = await api.get(`/dashboard/community?month=${month}&year=${year}`);
+      const { data } = await api.get(`/public/community?month=${m}&year=${y}`);
       return data.data || [];
+    },
+  });
+};
+
+/**
+ * Public Dorm Settings (Dorm info, rules, address, manager contact)
+ */
+export const useDormSettings = () => {
+  return useQuery({
+    queryKey: ['public', 'settings'],
+    queryFn: async () => {
+      const { data } = await api.get('/public/settings');
+      return data.data;
     },
   });
 };

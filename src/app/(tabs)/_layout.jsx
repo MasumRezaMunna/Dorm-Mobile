@@ -1,36 +1,18 @@
 /**
- * Bottom Tab Navigator for member users.
- * Tabs: Home | Notices | Community | Profile
- * Manager users also get access to a manager button from the Home tab.
+ * Bottom Tab Navigator for the Dorm Solution Mobile App.
+ * Tabs: Home | Notices | Meals | Market | Dorm Hub
+ *
+ * Provides instant access to all core public website sections without authentication.
  */
 import { Tabs } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import useAuthStore from '../../store/authStore';
-import { useNotifications } from '../../features/notifications/hooks/useNotifications';
 import Colors from '../../constants/colors';
 
 function TabBarIcon({ name, focused, color }) {
   return (
     <View style={[styles.iconWrapper, focused && styles.iconFocused]}>
       <Ionicons name={focused ? name : `${name}-outline`} size={22} color={color} />
-    </View>
-  );
-}
-
-function NotificationTab({ focused, color }) {
-  const { data: notifications = [] } = useNotifications();
-  const unread = notifications.filter(n => !n.isRead).length;
-
-  return (
-    <View>
-      <TabBarIcon name="notifications" focused={focused} color={color} />
-      {unread > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -42,7 +24,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: '#a78bfa',
-        tabBarInactiveTintColor: '#475569',
+        tabBarInactiveTintColor: '#64748b',
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.tabLabel,
       }}
@@ -66,21 +48,37 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="meals"
         options={{
-          title: 'Community',
+          title: 'Meals',
           tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="people" focused={focused} color={color} />
+            <TabBarIcon name="restaurant" focused={focused} color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="market"
+        options={{
+          title: 'Market',
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon name="cart" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Dorm Hub',
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon name="business" focused={focused} color={color} />
+          ),
+        }}
+      />
+      {/* Hide legacy profile from tab bar */}
+      <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="person" focused={focused} color={color} />
-          ),
+          href: null,
         }}
       />
     </Tabs>
@@ -98,7 +96,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     marginTop: 2,
   },
   iconWrapper: {
@@ -109,22 +107,5 @@ const styles = StyleSheet.create({
   },
   iconFocused: {
     backgroundColor: 'rgba(167,139,250,0.12)',
-  },
-  badge: {
-    position: 'absolute',
-    top: 0,
-    right: -2,
-    backgroundColor: '#f43f5e',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: {
-    fontSize: 9,
-    color: '#fff',
-    fontWeight: '700',
   },
 });

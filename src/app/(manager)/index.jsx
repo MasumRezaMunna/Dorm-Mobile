@@ -34,7 +34,7 @@ export default function ManagerDashboardScreen() {
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useManagerDashboard();
 
-  const overview = data?.overview || {};
+  const overview = data?.overview || data || {};
 
   const stats = [
     {

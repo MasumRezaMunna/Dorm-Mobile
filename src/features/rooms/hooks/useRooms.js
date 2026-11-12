@@ -1,51 +1,42 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
-import { QUERY_KEYS } from '../../../utils/constants';
 
-export const useRooms = () => {
+export const useRooms = (status, floor) => {
   return useQuery({
-    queryKey: QUERY_KEYS.ROOMS,
+    queryKey: ['public', 'rooms', status, floor],
     queryFn: async () => {
-      const { data } = await api.get('/rooms');
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      if (floor)  params.append('floor', floor);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const { data } = await api.get(`/public/rooms${query}`);
       return data.data || [];
     },
   });
 };
 
-export const useCreateRoom = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await api.post('/rooms', payload);
+export const useRoomById = (id) => {
+  return useQuery({
+    queryKey: ['public', 'rooms', id],
+    queryFn: async () => {
+      const { data } = await api.get(`/public/rooms/${id}`);
       return data.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ROOMS });
-    },
+    enabled: !!id,
   });
 };
 
-export const useUpdateRoom = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...payload }) => {
-      const { data } = await api.put(`/rooms/${id}`, payload);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ROOMS });
-    },
-  });
-};
+export const useCreateRoom = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useDeleteRoom = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/rooms/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ROOMS });
-    },
-  });
-};
+export const useUpdateRoom = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
+
+export const useDeleteRoom = () => ({
+  mutate: () => {},
+  isPending: false,
+});

@@ -1,40 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
-import { QUERY_KEYS } from '../../../utils/constants';
+import { getCurrentMonthYear } from '../../../utils/helpers';
 
-export const useExpenses = (month, year) => {
+export const useExpenses = (month, year, expenseType = 'all') => {
+  const current = getCurrentMonthYear();
+  const m = month || current.month;
+  const y = year || current.year;
+
   return useQuery({
-    queryKey: [...QUERY_KEYS.EXPENSES, month, year],
+    queryKey: ['public', 'expenses', m, y, expenseType],
     queryFn: async () => {
-      const { data } = await api.get(`/expenses?month=${month}&year=${year}`);
-      return data.data || [];
+      const params = new URLSearchParams();
+      params.append('month', m);
+      params.append('year', y);
+      if (expenseType && expenseType !== 'all') {
+        params.append('expenseType', expenseType);
+      }
+      const { data } = await api.get(`/public/expenses?${params.toString()}`);
+      return data.data || { expenses: [], groceryCost: 0, commonCost: 0, grandTotal: 0 };
     },
   });
 };
 
-export const useCreateExpense = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await api.post('/expenses', payload);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD_MANAGER });
-    },
-  });
-};
+export const useCreateExpense = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useDeleteExpense = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/expenses/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD_MANAGER });
-    },
-  });
-};
+export const useDeleteExpense = () => ({
+  mutate: () => {},
+  isPending: false,
+});

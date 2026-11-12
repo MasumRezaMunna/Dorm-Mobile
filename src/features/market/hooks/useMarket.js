@@ -1,63 +1,51 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
-import { QUERY_KEYS } from '../../../utils/constants';
 
-export const useMarketSchedules = (month, year) => {
+export const useTodayMarketSchedule = () => {
   return useQuery({
-    queryKey: ['market', 'schedules', month, year],
+    queryKey: ['public', 'market', 'today'],
     queryFn: async () => {
-      const { data } = await api.get(`/market-schedules?month=${month}&year=${year}`);
+      const { data } = await api.get('/public/market-schedules/today');
+      return data.data;
+    },
+  });
+};
+
+export const useUpcomingMarketSchedules = () => {
+  return useQuery({
+    queryKey: ['public', 'market', 'upcoming'],
+    queryFn: async () => {
+      const { data } = await api.get('/public/market-schedules/upcoming');
       return data.data || [];
     },
   });
 };
 
-export const useMarketStats = () => {
+export const useMarketScheduleHistory = (page = 1, limit = 20) => {
   return useQuery({
-    queryKey: QUERY_KEYS.MARKET_STATS,
+    queryKey: ['public', 'market', 'history', page, limit],
     queryFn: async () => {
-      const { data } = await api.get('/market-schedules/stats');
-      return data.data;
+      const { data } = await api.get(`/public/market-schedules/history?page=${page}&limit=${limit}`);
+      return data.data || [];
     },
   });
 };
 
-export const useCreateMarketSchedule = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await api.post('/market-schedules', payload);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['market', 'schedules'] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MARKET_STATS });
-    },
-  });
-};
+// Aliases for backwards compatibility
+export const useMarketSchedules = () => useUpcomingMarketSchedules();
+export const useMarketStats = () => useTodayMarketSchedule();
 
-export const useUpdateMarketScheduleStatus = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, status }) => {
-      const { data } = await api.patch(`/market-schedules/${id}/status`, { status });
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['market', 'schedules'] });
-    },
-  });
-};
+export const useCreateMarketSchedule = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useDeleteMarketSchedule = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/market-schedules/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['market', 'schedules'] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MARKET_STATS });
-    },
-  });
-};
+export const useUpdateMarketScheduleStatus = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
+
+export const useDeleteMarketSchedule = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});

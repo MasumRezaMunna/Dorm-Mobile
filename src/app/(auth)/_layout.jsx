@@ -1,11 +1,8 @@
-import { Stack } from 'expo-router';
+import { Redirect } from 'expo-router';
 
+/**
+ * Auth group is disabled — redirects directly to the main application.
+ */
 export default function AuthLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      <Stack.Screen name="splash" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="pending" />
-    </Stack>
-  );
+  return <Redirect href="/(tabs)" />;
 }

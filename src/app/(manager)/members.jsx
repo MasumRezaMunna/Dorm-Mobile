@@ -1,5 +1,5 @@
 /**
- * Manager Members Screen — list all members with status info.
+ * Members Directory Screen
  */
 import { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, RefreshControl } from 'react-native';
@@ -14,22 +14,26 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 
 function MemberItem({ item }) {
+  const name = item.name || item.userId?.displayName || 'Resident';
+  const photo = item.photoURL || item.userId?.photoURL;
+  const room = item.room?.roomNumber || item.roomId?.roomNumber;
+
   return (
     <View style={styles.item}>
       <Avatar
-        uri={item.userId?.photoURL}
-        name={item.userId?.displayName}
-        size={48}
+        uri={photo}
+        name={name}
+        size={46}
       />
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>{item.userId?.displayName || 'Unknown'}</Text>
+        <Text style={styles.name} numberOfLines={1}>{name}</Text>
         <Text style={styles.id}>ID: {item.memberId}</Text>
-        <Text style={styles.detail} numberOfLines={1}>{item.userId?.email}</Text>
+        {room && <Text style={styles.roomNum}>Room {room}</Text>}
       </View>
       <View style={styles.right}>
-        <Badge label={item.status} colorKey={item.status} />
-        {item.roomId?.roomNumber && (
-          <Text style={styles.roomNum}>Room {item.roomId.roomNumber}</Text>
+        <Badge label={item.status || 'active'} colorKey={item.status || 'active'} />
+        {item.totalMeals !== undefined && (
+          <Text style={styles.mealsText}>{item.totalMeals} meals</Text>
         )}
       </View>
     </View>
@@ -40,20 +44,14 @@ export default function ManagerMembersScreen() {
   const router = useRouter();
   const { data: members = [], isLoading, refetch, isRefetching } = useMembers();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
-  const filtered = members.filter(m => {
-    const name  = m.userId?.displayName?.toLowerCase() || '';
-    const email = m.userId?.email?.toLowerCase() || '';
-    const id    = m.memberId?.toLowerCase() || '';
-    const matchSearch = name.includes(search.toLowerCase())
-      || email.includes(search.toLowerCase())
-      || id.includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || m.status === statusFilter;
-    return matchSearch && matchStatus;
+  const filtered = members.filter((m) => {
+    const name = (m.name || m.userId?.displayName || '').toLowerCase();
+    const id = (m.memberId || '').toLowerCase();
+    const room = (m.room?.roomNumber || m.roomId?.roomNumber || '').toLowerCase();
+    const q = search.toLowerCase();
+    return name.includes(q) || id.includes(q) || room.includes(q);
   });
-
-  const activeCount = members.filter(m => m.status === 'active').length;
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -62,8 +60,8 @@ export default function ManagerMembersScreen() {
           <Ionicons name="arrow-back" size={22} color={Colors.dark.text} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.title}>Members</Text>
-          <Text style={styles.subtitle}>{activeCount} active / {members.length} total</Text>
+          <Text style={styles.title}>Residents Directory</Text>
+          <Text style={styles.subtitle}>{members.length} total residents</Text>
         </View>
       </View>
 
@@ -73,35 +71,25 @@ export default function ManagerMembersScreen() {
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search by name, email, ID..."
+          placeholder="Search by name, ID or room..."
           placeholderTextColor={Colors.dark.textDim}
           style={styles.searchInput}
         />
-      </View>
-
-      {/* Status Filter */}
-      <View style={styles.filterRow}>
-        {['all', 'active', 'inactive', 'left'].map(s => (
-          <TouchableOpacity
-            key={s}
-            onPress={() => setStatusFilter(s)}
-            style={[styles.pill, statusFilter === s && styles.pillActive]}
-          >
-            <Text style={[styles.pillText, statusFilter === s && styles.pillTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </Text>
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Ionicons name="close-circle" size={18} color={Colors.dark.textDim} />
           </TouchableOpacity>
-        ))}
+        )}
       </View>
 
       {isLoading ? (
         <View style={{ padding: 16 }}>
-          {[1,2,3].map(i => <CardSkeleton key={i} />)}
+          {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
         </View>
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={item => item._id}
+          keyExtractor={(item) => item.memberId || item._id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
@@ -109,7 +97,7 @@ export default function ManagerMembersScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="person-outline" size={40} color="rgba(167,139,250,0.3)" />
-              <Text style={styles.emptyText}>No members found</Text>
+              <Text style={styles.emptyText}>No residents found</Text>
             </View>
           }
         />
@@ -134,30 +122,22 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: Colors.dark.card, borderRadius: 14,
-    marginHorizontal: 16, marginBottom: 10,
+    marginHorizontal: 16, marginBottom: 12,
     borderWidth: 1, borderColor: Colors.dark.border,
     paddingHorizontal: 14, paddingVertical: 10,
   },
   searchInput: { flex: 1, fontSize: 14, color: Colors.dark.text },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 12 },
-  pill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-    backgroundColor: Colors.dark.card, borderWidth: 1, borderColor: Colors.dark.border,
-  },
-  pillActive: { backgroundColor: 'rgba(124,58,237,0.2)', borderColor: '#7c3aed' },
-  pillText: { fontSize: 12, color: Colors.dark.textMuted, fontWeight: '500' },
-  pillTextActive: { color: '#a78bfa' },
   list: { paddingHorizontal: 16, paddingBottom: 48 },
   item: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.dark.border,
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.dark.border,
   },
   info: { flex: 1 },
   name: { fontSize: 14, fontWeight: '700', color: Colors.dark.text },
   id:   { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
-  detail: { fontSize: 12, color: Colors.dark.textMuted, marginTop: 2 },
+  roomNum: { fontSize: 12, color: '#a78bfa', marginTop: 2, fontWeight: '500' },
   right: { alignItems: 'flex-end', gap: 4 },
-  roomNum: { fontSize: 11, color: Colors.dark.textDim, marginTop: 4 },
+  mealsText: { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 48, gap: 12 },
   emptyText: { fontSize: 14, color: Colors.dark.textDim },
 });

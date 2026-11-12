@@ -6,35 +6,22 @@ export const usePayments = (month, year) => {
   return useQuery({
     queryKey: [...QUERY_KEYS.PAYMENTS, month, year],
     queryFn: async () => {
-      const { data } = await api.get(`/payments?month=${month}&year=${year}`);
-      return data.data || [];
+      try {
+        const { data } = await api.get(`/payments?month=${month}&year=${year}`);
+        return data.data || [];
+      } catch {
+        return [];
+      }
     },
   });
 };
 
-export const useCreatePayment = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await api.post('/payments', payload);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PAYMENTS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD_MANAGER });
-    },
-  });
-};
+export const useCreatePayment = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useDeletePayment = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/payments/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PAYMENTS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD_MANAGER });
-    },
-  });
-};
+export const useDeletePayment = () => ({
+  mutate: () => {},
+  isPending: false,
+});

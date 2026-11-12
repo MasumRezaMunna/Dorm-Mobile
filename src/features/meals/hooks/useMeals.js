@@ -1,23 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
-import { QUERY_KEYS } from '../../../utils/constants';
 import { getCurrentMonthYear } from '../../../utils/helpers';
 
-export const useMyMeals = () => {
+export const useWeeklyPlan = (dateString) => {
   return useQuery({
-    queryKey: QUERY_KEYS.MY_MEALS,
+    queryKey: ['public', 'meals', 'weekly-plan', dateString],
     queryFn: async () => {
-      const { data } = await api.get('/meals/my');
-      return data.data || [];
-    },
-  });
-};
-
-export const useWeeklyPlan = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.WEEKLY_PLAN,
-    queryFn: async () => {
-      const { data } = await api.get('/meals/weekly-plan');
+      const url = dateString ? `/public/meals/weekly-plan?date=${dateString}` : '/public/meals/weekly-plan';
+      const { data } = await api.get(url);
       return data.data;
     },
   });
@@ -25,11 +15,31 @@ export const useWeeklyPlan = () => {
 
 export const useMonthlySummary = (month, year) => {
   const current = getCurrentMonthYear();
+  const m = month || current.month;
+  const y = year || current.year;
+
   return useQuery({
-    queryKey: ['meals', 'monthly-detail', month, year],
+    queryKey: ['public', 'meals', 'monthly-detail', m, y],
     queryFn: async () => {
-      const { data } = await api.get(`/meals/monthly-detail?month=${month}&year=${year}`);
+      const { data } = await api.get(`/public/meals/monthly-detail?month=${m}&year=${y}`);
       return data.data;
     },
   });
 };
+
+export const useMealEntries = (date, month, year) => {
+  return useQuery({
+    queryKey: ['public', 'meals', 'entries', date, month, year],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (date) params.append('date', date);
+      if (month) params.append('month', month);
+      if (year) params.append('year', year);
+      const { data } = await api.get(`/public/meals/entries?${params.toString()}`);
+      return data.data || [];
+    },
+  });
+};
+
+// Alias for backwards compatibility
+export const useMyMeals = () => useMealEntries();

@@ -1,12 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
-import { QUERY_KEYS } from '../../../utils/constants';
 
-export const useNotices = () => {
+export const useNotices = (priority = 'all') => {
   return useQuery({
-    queryKey: QUERY_KEYS.NOTICES,
+    queryKey: ['public', 'notices', priority],
     queryFn: async () => {
-      const { data } = await api.get('/notices');
+      const url = priority && priority !== 'all'
+        ? `/public/notices?priority=${priority}`
+        : '/public/notices';
+      const { data } = await api.get(url);
       return data.data || [];
     },
   });
@@ -14,48 +16,26 @@ export const useNotices = () => {
 
 export const useNoticeById = (id) => {
   return useQuery({
-    queryKey: ['notices', id],
+    queryKey: ['public', 'notices', id],
     queryFn: async () => {
-      const { data } = await api.get(`/notices/${id}`);
+      const { data } = await api.get(`/public/notices/${id}`);
       return data.data;
     },
     enabled: !!id,
   });
 };
 
-export const useCreateNotice = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload) => {
-      const { data } = await api.post('/notices', payload);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTICES });
-    },
-  });
-};
+export const useCreateNotice = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useDeleteNotice = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/notices/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTICES });
-    },
-  });
-};
+export const useDeleteNotice = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});
 
-export const useTogglePin = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.put(`/notices/${id}/pin`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTICES });
-    },
-  });
-};
+export const useTogglePin = () => ({
+  mutateAsync: async () => {},
+  isPending: false,
+});

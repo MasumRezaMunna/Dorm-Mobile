@@ -6,8 +6,12 @@ export const useComplaints = () => {
   return useQuery({
     queryKey: QUERY_KEYS.MY_COMPLAINTS,
     queryFn: async () => {
-      const { data } = await api.get('/complaints/my');
-      return data.data || [];
+      try {
+        const { data } = await api.get('/complaints/my');
+        return data.data || [];
+      } catch {
+        return [];
+      }
     },
   });
 };
@@ -16,8 +20,12 @@ export const useAllComplaints = () => {
   return useQuery({
     queryKey: QUERY_KEYS.COMPLAINTS_ALL,
     queryFn: async () => {
-      const { data } = await api.get('/complaints');
-      return data.data || [];
+      try {
+        const { data } = await api.get('/complaints');
+        return data.data || [];
+      } catch {
+        return [];
+      }
     },
   });
 };
@@ -26,8 +34,12 @@ export const useComplaintById = (id) => {
   return useQuery({
     queryKey: ['complaints', id],
     queryFn: async () => {
-      const { data } = await api.get(`/complaints/${id}`);
-      return data.data;
+      try {
+        const { data } = await api.get(`/complaints/${id}`);
+        return data.data;
+      } catch {
+        return null;
+      }
     },
     enabled: !!id,
   });

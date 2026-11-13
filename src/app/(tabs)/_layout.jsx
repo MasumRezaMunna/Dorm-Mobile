@@ -1,7 +1,6 @@
 /**
  * Bottom Tab Navigator for Dorm Solution.
- * Tabs: Home | Notices | Meals | Bazar | Dorm Hub
- * Modernized with sleek icons, refined typography, and active indicator glow.
+ * Theme: Premium Dark Green & Emerald (#0f172a bg, #1e293b surface, #34d399 active)
  */
 import React from 'react';
 import { Tabs } from 'expo-router';
@@ -23,7 +22,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#a78bfa',
+        tabBarActiveTintColor: '#34d399', // Mint Green active tint
         tabBarInactiveTintColor: '#64748b',
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.tabLabel,
@@ -87,8 +86,8 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#13131f',
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Colors.dark.surface, // #1e293b
+    borderTopColor: Colors.dark.border,
     borderTopWidth: 1,
     height: Platform.OS === 'ios' ? 88 : 66,
     paddingBottom: Platform.OS === 'ios' ? 28 : 10,
@@ -108,6 +107,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   iconFocused: {
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
   },
 });

@@ -1,7 +1,6 @@
 /**
- * Home Tab — Dorm Solution Premium Dashboard
- * Designed with a sleek, modern visual hierarchy, instant status cards,
- * today's meal schedule, bazar roster, and offline-friendly announcements.
+ * Home Tab — Dorm Solution Dashboard
+ * Theme: Dark Green Aesthetic (#0f172a bg, #1e293b surface, #059669 / #10b981 / #34d399)
  */
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet, StatusBar } from 'react-native';
@@ -20,7 +19,7 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 import { formatCurrency, formatDate, getMonthName } from '../../utils/helpers';
 
-function QuickAction({ icon, label, onPress, color = '#8b5cf6', badge = null }) {
+function QuickAction({ icon, label, onPress, color = '#10b981', badge = null }) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.78} style={styles.quickBtn}>
       <View style={[styles.quickIcon, { backgroundColor: `${color}18` }]}>
@@ -53,14 +52,14 @@ export default function HomeScreen() {
       title: 'Active Residents',
       value: isLoading ? '...' : (data?.activeMembers ?? 0),
       subtitle: `${data?.totalMembers ?? 0} total registered`,
-      gradientColors: ['#8b5cf6', '#6d28d9'],
+      gradientColors: ['#059669', '#10b981'],
       icon: ({ size, color }) => <Ionicons name="people" size={size} color={color} />,
     },
     {
       title: 'Rooms Capacity',
       value: isLoading ? '...' : `${data?.occupiedRooms ?? 0}/${data?.totalRooms ?? 0}`,
       subtitle: `${data?.availableRooms ?? 0} seats open`,
-      gradientColors: ['#3b82f6', '#2563eb'],
+      gradientColors: ['#047857', '#059669'],
       icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
     },
     {
@@ -74,21 +73,21 @@ export default function HomeScreen() {
       title: 'Current Rate',
       value: isLoading ? '...' : formatCurrency(data?.mealRate ?? 0),
       subtitle: 'Average per meal',
-      gradientColors: ['#10b981', '#059669'],
+      gradientColors: ['#10b981', '#34d399'],
       icon: ({ size, color }) => <Ionicons name="trending-up" size={size} color={color} />,
     },
     {
       title: 'Common Cost',
       value: isLoading ? '...' : formatCurrency(data?.commonCostPerMember ?? 0),
       subtitle: 'Per active member',
-      gradientColors: ['#ec4899', '#be185d'],
+      gradientColors: ['#059669', '#064e3b'],
       icon: ({ size, color }) => <Ionicons name="receipt" size={size} color={color} />,
     },
     {
       title: 'Total Expenses',
       value: isLoading ? '...' : formatCurrency(data?.monthlyExpenses ?? 0),
       subtitle: 'Grocery & Common',
-      gradientColors: ['#6366f1', '#4338ca'],
+      gradientColors: ['#047857', '#10b981'],
       icon: ({ size, color }) => <Ionicons name="wallet" size={size} color={color} />,
     },
   ], [data, isLoading, currentMonthName]);
@@ -102,7 +101,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -110,7 +109,7 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#a78bfa"
+            tintColor="#34d399"
           />
         }
       >
@@ -134,7 +133,7 @@ export default function HomeScreen() {
               <QuickAction
                 icon="megaphone-outline"
                 label="Notices"
-                color="#a78bfa"
+                color="#34d399"
                 badge={notices.length > 0 ? `${notices.length}` : null}
                 onPress={() => router.push('/(tabs)/notices')}
               />
@@ -153,19 +152,19 @@ export default function HomeScreen() {
               <QuickAction
                 icon="bed-outline"
                 label="Room Hub"
-                color="#3b82f6"
+                color="#059669"
                 onPress={() => router.push('/(tabs)/community')}
               />
               <QuickAction
                 icon="people-outline"
                 label="Residents"
-                color="#8b5cf6"
+                color="#34d399"
                 onPress={() => router.push('/(tabs)/community')}
               />
               <QuickAction
                 icon="call-outline"
                 label="Helpline"
-                color="#ec4899"
+                color="#10b981"
                 onPress={() => router.push('/settings')}
               />
             </View>
@@ -208,7 +207,7 @@ export default function HomeScreen() {
                 <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.lunch || 'Standard menu'}</Text>
               </View>
               <View style={styles.menuItemRow}>
-                <Ionicons name="moon-outline" size={15} color="#a78bfa" />
+                <Ionicons name="moon-outline" size={15} color="#34d399" />
                 <Text style={styles.menuLabel}>Dinner:</Text>
                 <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.dinner || 'Standard menu'}</Text>
               </View>
@@ -265,7 +264,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
   scroll: {
     flex: 1,
@@ -286,9 +285,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(16,185,129,0.12)',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   liveText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#10b981',
+    color: '#34d399',
     letterSpacing: 0.6,
   },
   quickActionsContainer: {
@@ -327,7 +326,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 13,
-    color: '#a78bfa',
+    color: '#34d399',
     fontWeight: '600',
   },
   quickGrid: {
@@ -339,7 +338,7 @@ const styles = StyleSheet.create({
   quickBtn: {
     alignItems: 'center',
     width: '31%',
-    backgroundColor: Colors.dark.card,
+    backgroundColor: Colors.dark.card, // #1e293b
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.dark.border,
@@ -359,7 +358,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#8b5cf6',
+    backgroundColor: '#059669',
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -379,18 +378,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   highlightCardMarket: {
-    backgroundColor: 'rgba(245,158,11,0.07)',
+    backgroundColor: 'rgba(245, 158, 11, 0.07)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.22)',
+    borderColor: 'rgba(245, 158, 11, 0.22)',
     padding: 16,
     marginTop: 12,
   },
   highlightCardMeals: {
-    backgroundColor: 'rgba(16,185,129,0.07)',
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.22)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
     padding: 16,
     marginTop: 12,
   },
@@ -404,7 +403,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245,158,11,0.18)',
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -418,7 +417,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(16,185,129,0.18)',
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -426,7 +425,7 @@ const styles = StyleSheet.create({
   highlightBadgeTextMeals: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#10b981',
+    color: '#34d399',
   },
   highlightDate: {
     fontSize: 12,

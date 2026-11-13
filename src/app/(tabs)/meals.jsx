@@ -1,8 +1,8 @@
 /**
  * Meals Screen — Weekly Meal Schedule & Monthly Financial Transparency.
- * High-performance tabbed interface with Day Highlight and clean cards.
+ * Theme: Dark Green Aesthetic (#0f172a bg, #059669 / #10b981 / #34d399)
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +42,7 @@ export default function MealsTabScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Meals & Dining</Text>
@@ -66,7 +66,7 @@ export default function MealsTabScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {/* ── 1. Weekly Menu Tab ── */}
@@ -97,7 +97,7 @@ export default function MealsTabScreen() {
                         )}
                       </View>
                       <View style={styles.dayPill}>
-                        <Ionicons name="calendar-outline" size={12} color="#a78bfa" />
+                        <Ionicons name="calendar-outline" size={12} color="#10b981" />
                         <Text style={styles.dayPillText}>Routine</Text>
                       </View>
                     </View>
@@ -116,8 +116,8 @@ export default function MealsTabScreen() {
 
                     {/* Dinner */}
                     <View style={[styles.mealBox, { marginTop: 8 }]}>
-                      <View style={[styles.mealIconBadge, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
-                        <Ionicons name="moon" size={16} color="#a78bfa" />
+                      <View style={[styles.mealIconBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                        <Ionicons name="moon" size={16} color="#34d399" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.mealTypeTitle}>Dinner</Text>
@@ -220,7 +220,7 @@ export default function MealsTabScreen() {
                       <Text style={styles.entryMealCount}>{entry.lunchCount ?? 0}</Text>
                     </View>
                     <View style={styles.entryMealCol}>
-                      <Ionicons name="moon-outline" size={14} color="#a78bfa" />
+                      <Ionicons name="moon-outline" size={14} color="#34d399" />
                       <Text style={styles.entryMealLabel}>Dinner: </Text>
                       <Text style={styles.entryMealCount}>{entry.dinnerCount ?? 0}</Text>
                     </View>
@@ -238,7 +238,7 @@ export default function MealsTabScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
   header: {
     paddingHorizontal: 16,
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   tabPillActive: {
-    backgroundColor: '#7c3aed',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669', // Emerald green
+    borderColor: '#10b981',
   },
   tabText: {
     fontSize: 12,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   weeklyCard: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: Colors.dark.card, // #1e293b
     borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.dark.border,
@@ -297,8 +297,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   weeklyCardToday: {
-    borderColor: 'rgba(167, 139, 250, 0.5)',
-    backgroundColor: 'rgba(139, 92, 246, 0.05)',
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
   },
   dayHeader: {
     flexDirection: 'row',
@@ -317,10 +317,10 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
   },
   dayNameToday: {
-    color: '#a78bfa',
+    color: '#34d399',
   },
   todayBadge: {
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#059669',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     padding: 12,
     borderRadius: 12,
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(245,158,11,0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     width: '48%',
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     borderRadius: 12,
     padding: 12,
   },
@@ -468,14 +468,14 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
   },
   entryBadge: {
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   entryBadgeText: {
     fontSize: 11,
-    color: '#a78bfa',
+    color: '#34d399',
     fontWeight: '700',
   },
   entryRow: {

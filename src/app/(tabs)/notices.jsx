@@ -1,6 +1,7 @@
 /**
  * Notices Tab — full notice feed with live search, priority filtering,
  * and Bookmarked filter for instant offline retrieval.
+ * Theme: Emerald & Mint Green on Dark Slate (#0f172a)
  */
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, RefreshControl, StatusBar } from 'react-native';
@@ -61,7 +62,7 @@ export default function NoticesTab() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -77,7 +78,7 @@ export default function NoticesTab() {
           <Ionicons
             name={filter === 'bookmarked' ? 'bookmark' : 'bookmark-outline'}
             size={18}
-            color={filter === 'bookmarked' ? '#ffffff' : '#a78bfa'}
+            color={filter === 'bookmarked' ? '#ffffff' : '#34d399'}
           />
           <Text style={[styles.savedBtnText, filter === 'bookmarked' && styles.savedBtnTextActive]}>
             {bookmarkedIds.length} Saved
@@ -136,7 +137,7 @@ export default function NoticesTab() {
           windowSize={7}
           removeClippedSubviews={true}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />
           }
           ListEmptyComponent={
             <EmptyState
@@ -164,7 +165,7 @@ export default function NoticesTab() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
   header: {
     flexDirection: 'row',
@@ -189,21 +190,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.25)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
   },
   savedHeaderBtnActive: {
-    backgroundColor: '#7c3aed',
-    borderColor: '#8b5cf6',
+    backgroundColor: '#059669',
+    borderColor: '#10b981',
   },
   savedBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#a78bfa',
+    color: '#34d399',
   },
   savedBtnTextActive: {
     color: '#ffffff',
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: Colors.dark.surface, // #1e293b
     borderWidth: 1,
     borderColor: Colors.dark.border,
     borderRadius: 14,
@@ -245,8 +246,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   filterPillActive: {
-    backgroundColor: '#7c3aed',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669', // Emerald green
+    borderColor: '#10b981',
   },
   filterText: {
     fontSize: 12,

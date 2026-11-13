@@ -82,7 +82,7 @@ export default function DormHubScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {/* ── SECTION 1: RESIDENTS ── */}
@@ -130,7 +130,7 @@ export default function DormHubScreen() {
                     <Text style={styles.residentName}>{m.name}</Text>
                     <View style={styles.residentMetaRow}>
                       <View style={styles.roomTag}>
-                        <Ionicons name="bed" size={11} color="#a78bfa" />
+                        <Ionicons name="bed" size={11} color="#34d399" />
                         <Text style={styles.roomTagText}>Room {m.room?.roomNumber || 'N/A'}</Text>
                       </View>
                       <Text style={styles.residentIdText}>ID: {m.memberId}</Text>
@@ -233,7 +233,7 @@ export default function DormHubScreen() {
                     <Text style={styles.expenseSummaryLbl}>Grocery Total</Text>
                   </View>
                   <View style={styles.expenseSummaryBox}>
-                    <Text style={[styles.expenseSummaryVal, { color: '#8b5cf6' }]}>{formatCurrency(commonCost)}</Text>
+                    <Text style={[styles.expenseSummaryVal, { color: '#10b981' }]}>{formatCurrency(commonCost)}</Text>
                     <Text style={styles.expenseSummaryLbl}>Common Total</Text>
                   </View>
                   <View style={styles.expenseSummaryBox}>
@@ -254,13 +254,13 @@ export default function DormHubScreen() {
                       <View
                         style={[
                           styles.expenseTypeBadge,
-                          { backgroundColor: e.expenseType === 'Grocery' ? 'rgba(245,158,11,0.1)' : 'rgba(139,92,246,0.1)' },
+                          { backgroundColor: e.expenseType === 'Grocery' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)' },
                         ]}
                       >
                         <Ionicons
                           name={e.expenseType === 'Grocery' ? 'cart' : 'construct'}
                           size={18}
-                          color={e.expenseType === 'Grocery' ? '#f59e0b' : '#8b5cf6'}
+                          color={e.expenseType === 'Grocery' ? '#f59e0b' : '#10b981'}
                         />
                       </View>
                       <View style={{ flex: 1 }}>
@@ -288,7 +288,7 @@ export default function DormHubScreen() {
               <View style={styles.infoCard}>
                 <View style={styles.infoHeader}>
                   <View style={styles.infoLogo}>
-                    <Ionicons name="home" size={24} color="#a78bfa" />
+                    <Ionicons name="home" size={24} color="#34d399" />
                   </View>
                   <View>
                     <Text style={styles.infoDormName}>{settings?.dormName || '11/38 Home'}</Text>
@@ -300,7 +300,7 @@ export default function DormHubScreen() {
 
                 {/* Contact Items */}
                 <View style={styles.contactItem}>
-                  <Ionicons name="location-outline" size={18} color="#a78bfa" />
+                  <Ionicons name="location-outline" size={18} color="#34d399" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.contactLabel}>Address</Text>
                     <Text style={styles.contactValue}>{settings?.address || '11/38 Dhaka, Bangladesh'}</Text>
@@ -381,11 +381,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   sectionPillActive: {
-    backgroundColor: 'rgba(124,58,237,0.2)',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669',
+    borderColor: '#10b981',
   },
   sectionPillText: { fontSize: 12, fontWeight: '600', color: Colors.dark.textMuted },
-  sectionPillTextActive: { color: '#a78bfa' },
+  sectionPillTextActive: { color: '#ffffff', fontWeight: '700' },
   scroll: { paddingHorizontal: 16, paddingBottom: 48 },
   searchBox: {
     flexDirection: 'row',
@@ -425,12 +425,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(167,139,250,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  roomTagText: { fontSize: 10, color: '#a78bfa', fontWeight: '600' },
+  roomTagText: { fontSize: 10, color: '#34d399', fontWeight: '600' },
   residentIdText: { fontSize: 11, color: Colors.dark.textDim },
   residentStats: { alignItems: 'center' },
   residentMealsCount: { fontSize: 15, fontWeight: '800', color: Colors.dark.text },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

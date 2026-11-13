@@ -26,7 +26,7 @@ export default function ProfileTab() {
           {/* Dorm Companion Card */}
           <View style={styles.card}>
             <View style={styles.avatarCircle}>
-              <Ionicons name="home" size={32} color="#a78bfa" />
+              <Ionicons name="home" size={32} color="#34d399" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.dormName}>{settings?.dormName || '11/38 Home'}</Text>
@@ -73,8 +73,8 @@ export default function ProfileTab() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push('/settings')} style={styles.navRow}>
-            <View style={[styles.navIcon, { backgroundColor: 'rgba(139,92,246,0.15)' }]}>
-              <Ionicons name="information-circle-outline" size={20} color="#8b5cf6" />
+            <View style={[styles.navIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+              <Ionicons name="information-circle-outline" size={20} color="#10b981" />
             </View>
             <Text style={styles.navLabel}>Dorm Rules & Contacts</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 18,
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

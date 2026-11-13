@@ -28,7 +28,7 @@ export default function ComplaintsScreen() {
               onPress={() => router.push('/complaints/create')}
               style={styles.addBtn}
             >
-              <Ionicons name="add" size={22} color="#a78bfa" />
+              <Ionicons name="add" size={22} color="#34d399" />
             </TouchableOpacity>
           }
         />
@@ -45,7 +45,7 @@ export default function ComplaintsScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />
           }
           renderItem={({ item }) => (
             <ComplaintCard
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   addBtn: {
     width: 40,
     height: 40,
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -103,10 +103,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 18,
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#7c3aed',
+    shadowColor: '#059669',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 16,

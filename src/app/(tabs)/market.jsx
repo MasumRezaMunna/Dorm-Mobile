@@ -64,7 +64,7 @@ export default function MarketTabScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {/* Today's Market Team Card */}
@@ -141,7 +141,7 @@ export default function MarketTabScreen() {
                 <View key={s._id || idx} style={styles.scheduleCard}>
                   <View style={styles.scheduleCardHeader}>
                     <View style={styles.dateBadge}>
-                      <Ionicons name="calendar" size={14} color="#a78bfa" />
+                      <Ionicons name="calendar" size={14} color="#34d399" />
                       <Text style={styles.dateBadgeText}>{formatDate(s.marketDate)}</Text>
                     </View>
                     <View style={styles.upcomingTag}>
@@ -291,11 +291,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   tabPillActive: {
-    backgroundColor: 'rgba(124,58,237,0.2)',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669',
+    borderColor: '#10b981',
   },
   tabText: { fontSize: 12, fontWeight: '600', color: Colors.dark.textMuted },
-  tabTextActive: { color: '#a78bfa' },
+  tabTextActive: { color: '#ffffff', fontWeight: '700' },
   scheduleCard: {
     backgroundColor: Colors.dark.card,
     borderRadius: 16,
@@ -315,14 +315,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  dateBadgeText: { fontSize: 13, fontWeight: '700', color: '#a78bfa' },
+  dateBadgeText: { fontSize: 13, fontWeight: '700', color: '#34d399' },
   upcomingTag: {
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
-  upcomingTagText: { fontSize: 11, fontWeight: '600', color: '#a78bfa' },
+  upcomingTagText: { fontSize: 11, fontWeight: '600', color: '#34d399' },
   teamTitle: { fontSize: 12, color: Colors.dark.textDim, marginBottom: 6 },
   teamRow: {
     flexDirection: 'row',

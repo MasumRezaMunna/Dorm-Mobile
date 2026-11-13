@@ -6,7 +6,7 @@ export default function ManagerLayout() {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
-        contentStyle: { backgroundColor: '#0f0f23' },
+        contentStyle: { backgroundColor: '#0f172a' },
       }}
     >
       <Stack.Screen name="index" />

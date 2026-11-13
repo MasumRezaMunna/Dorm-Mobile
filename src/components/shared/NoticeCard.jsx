@@ -1,3 +1,7 @@
+/**
+ * NoticeCard — displays a single notice with emerald/forest green accents and bookmarking.
+ * Optimized with React.memo for high-performance FlatList rendering.
+ */
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,10 +10,6 @@ import Colors from '../../constants/colors';
 import { formatRelativeTime } from '../../utils/helpers';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 
-/**
- * NoticeCard — displays a single notice with priority accents and bookmarking.
- * Optimized with React.memo for high-performance FlatList rendering.
- */
 function NoticeCardComponent({ notice, onPress }) {
   const isBookmarked = useBookmarkStore((state) => state.bookmarkedIds.includes(notice._id));
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
@@ -31,14 +31,14 @@ function NoticeCardComponent({ notice, onPress }) {
           <View style={styles.topStatusRow}>
             {notice.isPinned && (
               <View style={styles.pinnedRow}>
-                <Ionicons name="pin" size={12} color="#f59e0b" />
+                <Ionicons name="pin" size={12} color="#10b981" />
                 <Text style={styles.pinnedText}>Pinned</Text>
               </View>
             )}
             {isUrgent && (
               <View style={styles.urgentRow}>
                 <Ionicons name="alert-circle" size={12} color="#f43f5e" />
-                <Text style={styles.urgentText}>Priority Attention</Text>
+                <Text style={styles.urgentText}>Priority</Text>
               </View>
             )}
           </View>
@@ -68,7 +68,7 @@ function NoticeCardComponent({ notice, onPress }) {
             <Ionicons
               name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
               size={18}
-              color={isBookmarked ? '#a78bfa' : Colors.dark.textDim}
+              color={isBookmarked ? '#34d399' : Colors.dark.textDim}
             />
           </TouchableOpacity>
           <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
@@ -83,7 +83,7 @@ export default NoticeCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: Colors.dark.card, // #1e293b
     borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.dark.border,
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardPinned: {
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    backgroundColor: 'rgba(245, 158, 11, 0.04)',
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
   },
   cardUrgent: {
     borderColor: 'rgba(244, 63, 94, 0.35)',
@@ -115,21 +115,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(245,158,11,0.12)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
   },
   pinnedText: {
     fontSize: 11,
-    color: '#f59e0b',
+    color: '#34d399',
     fontWeight: '700',
   },
   urgentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(244,63,94,0.12)',
+    backgroundColor: 'rgba(244, 63, 94, 0.12)',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,

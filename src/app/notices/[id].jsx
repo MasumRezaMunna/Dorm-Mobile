@@ -1,6 +1,7 @@
 /**
  * Notice Detail Screen — Full content of a single notice with bookmarking,
  * sharing capabilities, and high readability styling.
+ * Theme: Dark Green Aesthetic
  */
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, StatusBar } from 'react-native';
@@ -36,7 +37,7 @@ export default function NoticeDetailScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
       {/* Header Bar */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
@@ -52,7 +53,7 @@ export default function NoticeDetailScreen() {
             <Ionicons
               name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
               size={20}
-              color={isBookmarked ? '#a78bfa' : Colors.dark.text}
+              color={isBookmarked ? '#34d399' : Colors.dark.text}
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleShare} style={styles.actionIconBtn} activeOpacity={0.7}>
@@ -76,7 +77,7 @@ export default function NoticeDetailScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {notice.isPinned && (
             <View style={styles.pinnedBanner}>
-              <Ionicons name="pin" size={14} color="#f59e0b" />
+              <Ionicons name="pin" size={14} color="#10b981" />
               <Text style={styles.pinnedText}>Pinned Dorm Announcement</Text>
             </View>
           )}
@@ -107,7 +108,7 @@ export default function NoticeDetailScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
   headerRow: {
     flexDirection: 'row',
@@ -156,9 +157,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245,158,11,0.12)',
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
     borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.25)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   },
   pinnedText: {
     fontSize: 12,
-    color: '#f59e0b',
+    color: '#34d399',
     fontWeight: '700',
   },
   title: {

@@ -92,11 +92,11 @@ export default function ManagerMembersScreen() {
           keyExtractor={(item) => item.memberId || item._id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
           renderItem={({ item }) => <MemberItem item={item} />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="person-outline" size={40} color="rgba(167,139,250,0.3)" />
+              <Ionicons name="person-outline" size={40} color="rgba(16,185,129,0.3)" />
               <Text style={styles.emptyText}>No residents found</Text>
             </View>
           }
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   name: { fontSize: 14, fontWeight: '700', color: Colors.dark.text },
   id:   { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
-  roomNum: { fontSize: 12, color: '#a78bfa', marginTop: 2, fontWeight: '500' },
+  roomNum: { fontSize: 12, color: '#34d399', marginTop: 2, fontWeight: '500' },
   right: { alignItems: 'flex-end', gap: 4 },
   mealsText: { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 48, gap: 12 },

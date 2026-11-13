@@ -57,7 +57,7 @@ export default function ComplaintDetailScreen() {
           {complaint.response && (
             <View style={[styles.section, styles.responseSection]}>
               <View style={styles.responseHeader}>
-                <Ionicons name="chatbubble-ellipses" size={16} color="#a78bfa" />
+                <Ionicons name="chatbubble-ellipses" size={16} color="#34d399" />
                 <Text style={styles.responseLabel}>Manager Response</Text>
               </View>
               <Text style={styles.responseText}>{complaint.response}</Text>
@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   responseSection: {
-    borderColor: 'rgba(167,139,250,0.2)',
-    backgroundColor: 'rgba(124,58,237,0.06)',
+    borderColor: 'rgba(16,185,129,0.25)',
+    backgroundColor: 'rgba(6,78,59,0.2)',
   },
   responseHeader: {
     flexDirection: 'row',
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   responseLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#a78bfa',
+    color: '#34d399',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

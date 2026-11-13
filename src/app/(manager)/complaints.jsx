@@ -132,7 +132,7 @@ export default function ManagerComplaintsScreen() {
           keyExtractor={item => item._id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
           renderItem={({ item }) => (
             <ComplaintCard
               complaint={item}
@@ -177,9 +177,9 @@ const styles = StyleSheet.create({
     borderRadius: 20, backgroundColor: Colors.dark.card,
     borderWidth: 1, borderColor: Colors.dark.border,
   },
-  pillActive: { backgroundColor: 'rgba(124,58,237,0.2)', borderColor: '#7c3aed' },
+  pillActive: { backgroundColor: '#059669', borderColor: '#10b981' },
   pillText: { fontSize: 12, color: Colors.dark.textMuted, fontWeight: '500' },
-  pillTextActive: { color: '#a78bfa' },
+  pillTextActive: { color: '#ffffff', fontWeight: '700' },
   list: { paddingHorizontal: 16, paddingBottom: 48 },
 });
 
@@ -197,9 +197,9 @@ const modal = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
     backgroundColor: Colors.dark.card, borderWidth: 1, borderColor: Colors.dark.border,
   },
-  pillActive: { backgroundColor: 'rgba(124,58,237,0.2)', borderColor: '#7c3aed' },
+  pillActive: { backgroundColor: '#059669', borderColor: '#10b981' },
   pillText: { fontSize: 13, color: Colors.dark.textMuted, fontWeight: '500' },
-  pillTextActive: { color: '#a78bfa' },
+  pillTextActive: { color: '#ffffff', fontWeight: '700' },
   input: {
     backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14,
     borderWidth: 1, borderColor: Colors.dark.border,
@@ -207,7 +207,7 @@ const modal = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 24, paddingVertical: 14, borderRadius: 14,
-    backgroundColor: '#7c3aed', alignItems: 'center',
+    backgroundColor: '#059669', alignItems: 'center',
   },
   submitText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

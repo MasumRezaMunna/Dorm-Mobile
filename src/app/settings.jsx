@@ -31,7 +31,7 @@ export default function SettingsScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {isLoading ? (
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <View style={styles.brandingHeader}>
               <View style={styles.iconCircle}>
-                <Ionicons name="home" size={28} color="#a78bfa" />
+                <Ionicons name="home" size={28} color="#34d399" />
               </View>
               <Text style={styles.dormName}>{settings?.dormName || '11/38 Home'}</Text>
               <Text style={styles.dormTagline}>Dormitory Management System</Text>
@@ -50,7 +50,7 @@ export default function SettingsScreen() {
 
             {/* Address */}
             <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={20} color="#a78bfa" />
+              <Ionicons name="location-outline" size={20} color="#34d399" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Location & Address</Text>
                 <Text style={styles.infoValue}>{settings?.address || '11/38 Dhaka, Bangladesh'}</Text>
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 18,
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,

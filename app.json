@@ -1,38 +1,46 @@
 {
   "expo": {
-    "name": "11/38 Home",
+    "name": "App",
     "slug": "dorm-solution",
     "version": "1.0.0",
-    "scheme": "home467",
+    "scheme": "dormsolution",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0f0f23",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f0f23"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/28734682-471a-4717-8042-9be34ece33f7"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.467home.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Allow 11/38 Home to access your camera to upload complaint images.",
-        "NSPhotoLibraryUsageDescription": "Allow 11/38 Home to access your photos to upload complaint images."
-      }
+      "bundleIdentifier": "com.home467.app",
+      "icon": "./assets/icon.png"
     },
     "android": {
       "package": "com.home467.app",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#0f0f23"
+      },
+      "permissions": []
     },
     "web": {
-      "bundler": "metro"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow 11/38 Home to access your photos.",
-          "cameraPermission": "Allow 11/38 Home to access your camera."
-        }
-      ],
+      "expo-updates",
       [
         "expo-font",
         {

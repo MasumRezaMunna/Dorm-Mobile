@@ -211,8 +211,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   pillActive: {
-    backgroundColor: 'rgba(124,58,237,0.2)',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669',
+    borderColor: '#10b981',
   },
   pillText: {
     fontSize: 13,
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   pillTextActive: {
-    color: '#a78bfa',
+    color: '#ffffff',
+    fontWeight: '700',
   },
 });

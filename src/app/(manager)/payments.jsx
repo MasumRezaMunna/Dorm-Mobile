@@ -140,7 +140,7 @@ export default function ManagerPaymentsScreen() {
           <Text style={styles.subtitle}>{getMonthName(month)} {year}</Text>
         </View>
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addBtn}>
-          <Ionicons name="add" size={22} color="#a78bfa" />
+          <Ionicons name="add" size={22} color="#34d399" />
         </TouchableOpacity>
       </View>
 
@@ -166,7 +166,7 @@ export default function ManagerPaymentsScreen() {
           keyExtractor={item => item._id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.cardMain}>
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.dark.border,
   },
   addBtn: {
-    width: 40, height: 40, backgroundColor: 'rgba(167,139,250,0.12)',
+    width: 40, height: 40, backgroundColor: 'rgba(16,185,129,0.12)',
     borderRadius: 12, alignItems: 'center', justifyContent: 'center',
   },
   title: { fontSize: 20, fontWeight: '700', color: Colors.dark.text },
@@ -269,7 +269,7 @@ const modal = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
     backgroundColor: Colors.dark.card, borderWidth: 1, borderColor: Colors.dark.border,
   },
-  pillActive: { backgroundColor: 'rgba(124,58,237,0.2)', borderColor: '#7c3aed' },
+  pillActive: { backgroundColor: '#059669', borderColor: '#10b981' },
   pillText: { fontSize: 13, color: Colors.dark.textMuted, fontWeight: '500' },
-  pillTextActive: { color: '#a78bfa' },
+  pillTextActive: { color: '#ffffff', fontWeight: '700' },
 });

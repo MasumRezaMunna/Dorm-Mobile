@@ -3,57 +3,55 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/colors';
 
 /**
- * ScreenWrapper — wraps every screen with safe area, background, and optional scroll + pull-to-refresh.
+ * ScreenWrapper — Standard safe-area wrapper with optional pull-to-refresh.
+ * Theme: Dark-green background (#0f172a)
  */
 export default function ScreenWrapper({
   children,
-  scrollable = true,
+  scrollable = false,
   onRefresh,
-  refreshing = false,
+  isRefreshing = false,
   style,
-  contentStyle,
+  edges = ['top', 'left', 'right'],
 }) {
-  const content = (
-    <View style={[styles.content, contentStyle]}>
-      {children}
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={[styles.root, style]} edges={['top']}>
-      {scrollable ? (
+  if (scrollable) {
+    return (
+      <SafeAreaView style={[styles.root, style]} edges={edges}>
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={
             onRefresh ? (
               <RefreshControl
-                refreshing={refreshing}
+                refreshing={isRefreshing}
                 onRefresh={onRefresh}
-                tintColor="#a78bfa"
-                colors={['#7c3aed']}
+                tintColor="#34d399"
+                colors={['#10b981']}
               />
             ) : undefined
           }
         >
-          {content}
+          {children}
         </ScrollView>
-      ) : (
-        content
-      )}
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.root, style]} edges={edges}>
+      <View style={styles.flex}>{children}</View>
     </SafeAreaView>
   );
 }
 
 export function ScreenHeader({ title, subtitle, right }) {
   return (
-    <View style={headerStyles.wrapper}>
-      <View style={{ flex: 1 }}>
-        <Text style={headerStyles.title}>{title}</Text>
-        {subtitle && <Text style={headerStyles.subtitle}>{subtitle}</Text>}
+    <View style={styles.headerRow}>
+      <View style={styles.headerTextCol}>
+        <Text style={styles.headerTitle}>{title}</Text>
+        {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
       </View>
-      {right && <View>{right}</View>}
+      {right ? <View>{right}</View> : null}
     </View>
   );
 }
@@ -61,38 +59,32 @@ export function ScreenHeader({ title, subtitle, right }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
-  scroll: {
+  flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
-  },
-});
-
-const headerStyles = StyleSheet.create({
-  wrapper: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingTop: 4,
+    paddingVertical: 12,
   },
-  title: {
+  headerTextCol: {
+    flex: 1,
+  },
+  headerTitle: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.dark.text,
     letterSpacing: -0.3,
   },
-  subtitle: {
-    fontSize: 13,
-    color: Colors.dark.textMuted,
+  headerSubtitle: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
     marginTop: 2,
   },
 });

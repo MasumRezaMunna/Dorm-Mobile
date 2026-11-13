@@ -1,14 +1,11 @@
 /**
- * Home Tab — Dorm Solution Main Dashboard
- * Displays live dorm overview, statistics, quick actions, today's market team,
- * meal menu preview, and recent announcements.
- *
- * All data is fetched from public read-only endpoints without login.
+ * Home Tab — Dorm Solution Dashboard
+ * Theme: Dark Green Aesthetic (#0f172a bg, #1e293b surface, #059669 / #10b981 / #34d399)
  */
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -16,18 +13,26 @@ import { usePublicOverview } from '../../features/dashboard/hooks/useDashboard';
 import { useWeeklyPlan } from '../../features/meals/hooks/useMeals';
 import StatCard from '../../components/shared/StatCard';
 import NoticeCard from '../../components/shared/NoticeCard';
+import DormLogo from '../../components/shared/DormLogo';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 import { formatCurrency, formatDate, getMonthName } from '../../utils/helpers';
 
-// ─── Quick Action Item ────────────────────────────────────────────────────────
-function QuickAction({ icon, label, onPress, color = '#7c3aed' }) {
+function QuickServiceCard({ icon, label, sublabel, onPress, color = '#10b981', badge = null }) {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.quickBtn}>
-      <View style={[styles.quickIcon, { backgroundColor: `${color}22` }]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={styles.serviceCard}>
+      <View style={[styles.serviceIconWrapper, { backgroundColor: `${color}18` }]}>
         <Ionicons name={icon} size={22} color={color} />
+        {badge ? (
+          <View style={styles.serviceBadge}>
+            <Text style={styles.serviceBadgeText}>{badge}</Text>
+          </View>
+        ) : null}
       </View>
-      <Text style={styles.quickLabel}>{label}</Text>
+      <View style={styles.serviceTextCol}>
+        <Text style={styles.serviceLabel} numberOfLines={1}>{label}</Text>
+        {sublabel ? <Text style={styles.serviceSublabel} numberOfLines={1}>{sublabel}</Text> : null}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -37,65 +42,54 @@ export default function HomeScreen() {
   const { data, isLoading, refetch, isRefetching } = usePublicOverview();
   const { data: weeklyPlan } = useWeeklyPlan();
 
-  const currentMonthName = data?.month ? getMonthName(data.month) : getMonthName(new Date().getMonth() + 1);
+  const currentMonthName = useMemo(() => {
+    return data?.month ? getMonthName(data.month) : getMonthName(new Date().getMonth() + 1);
+  }, [data?.month]);
+
   const currentYear = data?.year || new Date().getFullYear();
 
-  // ─── Dorm Statistics Cards ──────────────────────────────────────────────────
-  const stats = [
+  // Primary live stats
+  const stats = useMemo(() => [
     {
-      title: 'Active Members',
-      value: isLoading ? '...' : (data?.activeMembers ?? 0),
-      subtitle: `${data?.totalMembers ?? 0} total residents`,
-      gradientColors: ['#8b5cf6', '#6d28d9'],
-      icon: ({ size, color }) => <Ionicons name="people" size={size} color={color} />,
-    },
-    {
-      title: 'Rooms Occupancy',
-      value: isLoading ? '...' : `${data?.occupiedRooms ?? 0}/${data?.totalRooms ?? 0}`,
-      subtitle: `${data?.availableRooms ?? 0} available`,
-      gradientColors: ['#3b82f6', '#2563eb'],
-      icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
-    },
-    {
-      title: 'Total Meals',
+      title: 'Monthly Meals',
       value: isLoading ? '...' : (data?.totalMeals ?? 0),
-      subtitle: `In ${currentMonthName}`,
+      subtitle: `${currentMonthName} count`,
       gradientColors: ['#f59e0b', '#ea580c'],
       icon: ({ size, color }) => <Ionicons name="restaurant" size={size} color={color} />,
     },
     {
-      title: 'Meal Rate',
+      title: 'Current Rate',
       value: isLoading ? '...' : formatCurrency(data?.mealRate ?? 0),
       subtitle: 'Average per meal',
-      gradientColors: ['#10b981', '#059669'],
+      gradientColors: ['#10b981', '#34d399'],
       icon: ({ size, color }) => <Ionicons name="trending-up" size={size} color={color} />,
     },
     {
       title: 'Common Cost',
       value: isLoading ? '...' : formatCurrency(data?.commonCostPerMember ?? 0),
       subtitle: 'Per active member',
-      gradientColors: ['#ec4899', '#be185d'],
+      gradientColors: ['#059669', '#064e3b'],
       icon: ({ size, color }) => <Ionicons name="receipt" size={size} color={color} />,
     },
     {
       title: 'Total Expenses',
       value: isLoading ? '...' : formatCurrency(data?.monthlyExpenses ?? 0),
-      subtitle: 'Grocery + Common',
-      gradientColors: ['#6366f1', '#4338ca'],
+      subtitle: 'Grocery & Common',
+      gradientColors: ['#047857', '#10b981'],
       icon: ({ size, color }) => <Ionicons name="wallet" size={size} color={color} />,
     },
-  ];
+  ], [data, isLoading, currentMonthName]);
 
   const notices = data?.recentNotices || [];
   const todayTeam = data?.todayMarketTeam;
 
-  // Derive today's meal if available
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayName = dayNames[new Date().getDay()];
   const todayMenu = weeklyPlan?.days?.find((d) => d.dayName === todayName);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -103,147 +97,147 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#a78bfa"
+            tintColor="#34d399"
           />
         }
       >
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <View>
-              <View style={styles.brandBadge}>
-                <Ionicons name="home" size={14} color="#a78bfa" />
-                <Text style={styles.brandBadgeText}>Dorm Solution</Text>
+            <View style={styles.headerLeftRow}>
+              <DormLogo size={42} showLabel={false} />
+              <View>
+                <Text style={styles.headerTitle}>Home</Text>
+                <Text style={styles.headerSubtitle}>{currentMonthName} {currentYear}</Text>
               </View>
-              <Text style={styles.greeting}>{data?.dormName || '11/38 Home'}</Text>
-              <Text style={styles.subGreeting}>
-                {data?.address ? data.address : 'Dorm Management System'}
-              </Text>
             </View>
-            <View style={styles.liveBadge}>
+            <View style={styles.liveIndicator}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>Live</Text>
+              <Text style={styles.liveText}>SYNCED</Text>
             </View>
           </View>
 
-          {/* Quick Actions Grid */}
-          <Text style={styles.sectionTitle}>Quick Access</Text>
-          <View style={styles.quickGrid}>
-            <QuickAction
-              icon="megaphone-outline"
-              label="Notices"
-              color="#a78bfa"
-              onPress={() => router.push('/(tabs)/notices')}
-            />
-            <QuickAction
-              icon="restaurant-outline"
-              label="Meals & Plan"
-              color="#10b981"
-              onPress={() => router.push('/meals')}
-            />
-            <QuickAction
-              icon="cart-outline"
-              label="Market Team"
-              color="#f59e0b"
-              onPress={() => router.push('/market')}
-            />
-            <QuickAction
-              icon="bed-outline"
-              label="Rooms"
-              color="#3b82f6"
-              onPress={() => router.push('/room')}
-            />
-            <QuickAction
-              icon="people-outline"
-              label="Community"
-              color="#8b5cf6"
-              onPress={() => router.push('/(tabs)/community')}
-            />
-            <QuickAction
-              icon="wallet-outline"
-              label="Expenses"
-              color="#ec4899"
-              onPress={() => router.push('/(manager)/expenses')}
-            />
+          {/* Quick Services — Dedicated Resident Hub */}
+          <View style={styles.quickActionsContainer}>
+            <View style={styles.quickHeaderRow}>
+              <View>
+                <Text style={styles.sectionHeading}>Quick Services</Text>
+                <Text style={styles.sectionSubtext}>Access all dorm utilities & records</Text>
+              </View>
+            </View>
+            <View style={styles.quickGrid}>
+              <QuickServiceCard
+                icon="megaphone-outline"
+                label="Notices"
+                sublabel="Circulars & news"
+                color="#34d399"
+                badge={notices.length > 0 ? `${notices.length}` : null}
+                onPress={() => router.push('/(tabs)/notices')}
+              />
+              <QuickServiceCard
+                icon="cart-outline"
+                label="Bazar Duty"
+                sublabel="Shopping teams"
+                color="#10b981"
+                badge={todayTeam ? 'Active' : null}
+                onPress={() => router.push('/(tabs)/market')}
+              />
+              <QuickServiceCard
+                icon="bed-outline"
+                label="Room Hub"
+                sublabel="Seats & capacity"
+                color="#059669"
+                onPress={() => router.push('/room')}
+              />
+              <QuickServiceCard
+                icon="people-outline"
+                label="Residents"
+                sublabel="Member roster"
+                color="#34d399"
+                onPress={() => router.push('/(tabs)/community')}
+              />
+
+            </View>
           </View>
 
-          {/* Today's Market Team Card */}
+          {/* Today's Market Team Highlight */}
           {todayTeam && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.cardHighlight}>
-              <View style={styles.cardHighlightHeader}>
-                <View style={styles.highlightBadge}>
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.highlightCardMarket}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.highlightBadgeMarket}>
                   <Ionicons name="basket" size={14} color="#f59e0b" />
-                  <Text style={styles.highlightBadgeText}>Today's Bazar Duty</Text>
+                  <Text style={styles.highlightBadgeTextMarket}>Today's Bazar Team</Text>
                 </View>
                 <Text style={styles.highlightDate}>{formatDate(todayTeam.marketDate)}</Text>
               </View>
               <Text style={styles.teamMembersText}>
                 {(todayTeam.members || []).map((m) => m.name || m.userId?.displayName || 'Resident').join(', ')}
               </Text>
-              {todayTeam.note && (
+              {todayTeam.note ? (
                 <Text style={styles.teamNoteText}>Note: {todayTeam.note}</Text>
-              )}
+              ) : null}
             </Animated.View>
           )}
 
-          {/* Today's Menu Preview */}
+          {/* Today's Dining Menu */}
           {todayMenu && (
-            <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.cardMenu}>
-              <View style={styles.cardHighlightHeader}>
-                <View style={[styles.highlightBadge, { backgroundColor: 'rgba(16,185,129,0.1)' }]}>
+            <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.highlightCardMeals}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.highlightBadgeMeals}>
                   <Ionicons name="restaurant" size={14} color="#10b981" />
-                  <Text style={[styles.highlightBadgeText, { color: '#10b981' }]}>Today's Menu ({todayName})</Text>
+                  <Text style={styles.highlightBadgeTextMeals}>Today's Dining ({todayName})</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/meals')}>
-                  <Text style={styles.seeAll}>Full Plan</Text>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/meals')}>
+                  <Text style={styles.linkText}>Weekly Menu →</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.menuItemRow}>
-                <Ionicons name="sunny-outline" size={14} color="#f59e0b" />
+                <Ionicons name="sunny-outline" size={15} color="#f59e0b" />
                 <Text style={styles.menuLabel}>Lunch:</Text>
-                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.lunch || 'Not specified'}</Text>
+                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.lunch || 'Standard menu'}</Text>
               </View>
               <View style={styles.menuItemRow}>
-                <Ionicons name="moon-outline" size={14} color="#a78bfa" />
+                <Ionicons name="moon-outline" size={15} color="#34d399" />
                 <Text style={styles.menuLabel}>Dinner:</Text>
-                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.dinner || 'Not specified'}</Text>
+                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.dinner || 'Standard menu'}</Text>
               </View>
             </Animated.View>
           )}
 
-          {/* Overview Stats Grid */}
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>Dorm Statistics ({currentMonthName} {currentYear})</Text>
+          {/* Financial Overview Statistics Grid */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Financial Overview</Text>
+            <Text style={styles.sectionSubtext}>{currentMonthName} {currentYear}</Text>
           </View>
           {isLoading ? (
             <View style={styles.statsGrid}>
-              {[1, 2, 3, 4, 5, 6].map((i) => <CardSkeleton key={i} />)}
+              {[1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
             </View>
           ) : (
             <View style={styles.statsGrid}>
               {stats.map((stat, i) => (
-                <Animated.View key={stat.title} entering={FadeInDown.delay(i * 60).springify()} style={styles.statItem}>
+                <Animated.View key={stat.title} entering={FadeInDown.delay(i * 40)} style={styles.statItem}>
                   <StatCard {...stat} />
                 </Animated.View>
               ))}
             </View>
           )}
 
-          {/* Recent Notices Section */}
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>Announcements & Notices</Text>
+          {/* Latest Announcements */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Latest Notices</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/notices')}>
-              <Text style={styles.seeAll}>See all</Text>
+              <Text style={styles.linkText}>View Board →</Text>
             </TouchableOpacity>
           </View>
           {notices.length === 0 && !isLoading ? (
             <View style={styles.emptyNoticeBox}>
-              <Ionicons name="megaphone-outline" size={24} color={Colors.dark.textDim} />
-              <Text style={styles.emptyNoticeText}>No announcements posted yet</Text>
+              <Ionicons name="megaphone-outline" size={26} color={Colors.dark.textDim} />
+              <Text style={styles.emptyNoticeText}>No announcements posted</Text>
             </View>
           ) : (
             notices.slice(0, 3).map((notice, i) => (
-              <Animated.View key={notice._id || i} entering={FadeInDown.delay(i * 60)}>
+              <Animated.View key={notice._id || i} entering={FadeInDown.delay(i * 50)}>
                 <NoticeCard
                   notice={notice}
                   onPress={() => router.push(`/notices/${notice._id}`)}
@@ -260,56 +254,47 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
-  scroll: { flex: 1 },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 40,
+    paddingTop: 8,
+    paddingBottom: 90,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
+    paddingVertical: 6,
   },
-  brandBadge: {
+  headerLeftRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(167,139,250,0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    marginBottom: 6,
+    gap: 12,
   },
-  brandBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#a78bfa',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  greeting: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: '800',
     color: Colors.dark.text,
     letterSpacing: -0.4,
   },
-  subGreeting: {
-    fontSize: 13,
-    color: Colors.dark.textMuted,
+  headerSubtitle: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
     marginTop: 2,
+    fontWeight: '500',
   },
-  liveBadge: {
+  liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(16,185,129,0.1)',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -321,103 +306,159 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   liveText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#10b981',
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#34d399',
+    letterSpacing: 0.6,
   },
-  sectionTitle: {
+  quickActionsContainer: {
+    marginBottom: 16,
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.18)',
+    padding: 16,
+  },
+  quickHeaderRow: {
+    marginBottom: 12,
+  },
+  sectionHeading: {
     fontSize: 16,
     fontWeight: '700',
     color: Colors.dark.text,
-    marginBottom: 12,
-    marginTop: 18,
+    letterSpacing: -0.2,
   },
-  sectionRow: {
+  sectionSubtext: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
+    marginTop: 2,
+  },
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
-    marginTop: 20,
+    marginTop: 22,
   },
-  seeAll: {
+  linkText: {
     fontSize: 13,
-    color: '#a78bfa',
+    color: '#34d399',
     fontWeight: '600',
   },
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
   },
-  quickBtn: {
+  serviceCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '31%',
-    backgroundColor: Colors.dark.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-  },
-  quickIcon: {
-    width: 44,
-    height: 44,
+    width: '48.5%',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+  serviceIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    position: 'relative',
   },
-  quickLabel: {
-    fontSize: 11,
+  serviceBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#059669',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  serviceBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  serviceTextCol: {
+    flex: 1,
+  },
+  serviceLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     color: Colors.dark.text,
-    fontWeight: '600',
-    textAlign: 'center',
   },
-  cardHighlight: {
-    backgroundColor: 'rgba(245,158,11,0.08)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.2)',
-    padding: 16,
-    marginTop: 14,
+  serviceSublabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    marginTop: 1,
   },
-  cardMenu: {
-    backgroundColor: 'rgba(16,185,129,0.08)',
-    borderRadius: 16,
+  highlightCardMarket: {
+    backgroundColor: 'rgba(245, 158, 11, 0.07)',
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.2)',
+    borderColor: 'rgba(245, 158, 11, 0.22)',
     padding: 16,
     marginTop: 12,
   },
-  cardHighlightHeader: {
+  highlightCardMeals: {
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    padding: 16,
+    marginTop: 12,
+  },
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  highlightBadge: {
+  highlightBadgeMarket: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245,158,11,0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  highlightBadgeText: {
+  highlightBadgeTextMarket: {
     fontSize: 11,
     fontWeight: '700',
     color: '#f59e0b',
   },
-  highlightDate: {
+  highlightBadgeMeals: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  highlightBadgeTextMeals: {
     fontSize: 11,
+    fontWeight: '700',
+    color: '#34d399',
+  },
+  highlightDate: {
+    fontSize: 12,
     color: Colors.dark.textDim,
   },
   teamMembersText: {
     fontSize: 14,
     fontWeight: '700',
     color: Colors.dark.text,
+    lineHeight: 20,
   },
   teamNoteText: {
     fontSize: 12,
@@ -451,9 +492,9 @@ const styles = StyleSheet.create({
   },
   emptyNoticeBox: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 28,
     backgroundColor: Colors.dark.card,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.dark.border,
     gap: 8,

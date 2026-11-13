@@ -1,46 +1,42 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getInitials } from '../../utils/helpers';
 
 /**
- * Avatar — shows profile picture or initials fallback with gradient background.
+ * Avatar — displays user initials with a polished green gradient circle.
  */
-export default function Avatar({ uri, name = '', size = 40, style }) {
-  const initials = getInitials(name);
-  const fontSize = Math.max(10, size * 0.35);
-
-  if (uri) {
-    return (
-      <Image
-        source={{ uri }}
-        style={[styles.image, { width: size, height: size, borderRadius: size / 2 }, style]}
-      />
-    );
-  }
+export default function Avatar({ name = '', size = 36, style }) {
+  const initials = name
+    ? name
+        .split(' ')
+        .map(p => p[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : '?';
 
   return (
     <LinearGradient
-      colors={['#7c3aed', '#2563eb']}
+      colors={['#059669', '#10b981']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.fallback, { width: size, height: size, borderRadius: size / 2 }, style]}
+      style={[
+        styles.avatar,
+        { width: size, height: size, borderRadius: size / 2 },
+        style,
+      ]}
     >
-      <Text style={[styles.initials, { fontSize }]}>{initials || '?'}</Text>
+      <Text style={[styles.text, { fontSize: size * 0.4 }]}>{initials}</Text>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  image: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  fallback: {
+  avatar: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: {
+  text: {
     color: '#ffffff',
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
 });

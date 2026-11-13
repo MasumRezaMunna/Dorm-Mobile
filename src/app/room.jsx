@@ -61,7 +61,7 @@ export default function RoomScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {/* Summary Stats */}
@@ -99,7 +99,7 @@ export default function RoomScreen() {
               <Animated.View key={room._id} entering={FadeInDown.delay(idx * 40).duration(300)} style={styles.roomCard}>
                 <View style={styles.roomHeader}>
                   <View style={styles.roomBadge}>
-                    <Ionicons name="bed" size={18} color="#a78bfa" />
+                    <Ionicons name="bed" size={18} color="#34d399" />
                     <Text style={styles.roomNumber}>Room {room.roomNumber}</Text>
                   </View>
                   <Badge label={room.status || 'available'} colorKey={room.status || 'available'} />
@@ -117,7 +117,7 @@ export default function RoomScreen() {
                         styles.barFill,
                         {
                           width: `${occPct}%`,
-                          backgroundColor: occPct >= 100 ? '#f43f5e' : '#7c3aed',
+                          backgroundColor: occPct >= 100 ? '#f43f5e' : '#10b981',
                         },
                       ]}
                     />
@@ -193,11 +193,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   filterPillActive: {
-    backgroundColor: 'rgba(124,58,237,0.2)',
-    borderColor: '#7c3aed',
+    backgroundColor: '#059669',
+    borderColor: '#10b981',
   },
   filterPillText: { fontSize: 12, fontWeight: '600', color: Colors.dark.textMuted },
-  filterPillTextActive: { color: '#a78bfa' },
+  filterPillTextActive: { color: '#ffffff', fontWeight: '700' },
   scroll: { paddingHorizontal: 16, paddingBottom: 48 },
   statsRow: {
     flexDirection: 'row',

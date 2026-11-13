@@ -18,12 +18,12 @@ import Colors from '../constants/colors';
 import { formatRelativeTime } from '../utils/helpers';
 
 const TYPE_ICONS = {
-  bill:      { name: 'receipt-outline',       color: '#a78bfa' },
+  bill:      { name: 'receipt-outline',       color: '#10b981' },
   payment:   { name: 'cash-outline',          color: '#10b981' },
   notice:    { name: 'megaphone-outline',     color: '#f59e0b' },
   complaint: { name: 'alert-circle-outline',  color: '#f43f5e' },
-  visitor:   { name: 'person-outline',        color: '#3b82f6' },
-  meal:      { name: 'restaurant-outline',    color: '#f59e0b' },
+  visitor:   { name: 'person-outline',        color: '#34d399' },
+  meal:      { name: 'restaurant-outline',    color: '#10b981' },
   system:    { name: 'information-circle-outline', color: '#64748b' },
 };
 
@@ -88,7 +88,7 @@ export default function NotificationsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />
           }
           renderItem={({ item }) => (
             <NotifItem
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
   },
   title: { fontSize: 20, fontWeight: '700', color: Colors.dark.text },
-  unreadCount: { fontSize: 12, color: '#a78bfa', marginTop: 2 },
+  unreadCount: { fontSize: 12, color: '#34d399', marginTop: 2 },
   markAllBtn: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: 'rgba(167,139,250,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     borderRadius: 10,
   },
-  markAllText: { fontSize: 12, color: '#a78bfa', fontWeight: '600' },
+  markAllText: { fontSize: 12, color: '#34d399', fontWeight: '600' },
   list: { paddingHorizontal: 16, paddingBottom: 48 },
   item: {
     flexDirection: 'row',
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.dark.border,
   },
   itemUnread: {
-    backgroundColor: 'rgba(167,139,250,0.04)',
+    backgroundColor: 'rgba(16,185,129,0.06)',
   },
   iconWrapper: {
     width: 44,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#a78bfa',
+    backgroundColor: '#10b981',
   },
   textWrapper: { flex: 1 },
   itemTitle: {

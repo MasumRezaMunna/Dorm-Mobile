@@ -13,7 +13,7 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 import { formatCurrency } from '../../utils/helpers';
 
-function NavCard({ icon, label, route, color = '#7c3aed' }) {
+function NavCard({ icon, label, route, color = '#10b981' }) {
   const router = useRouter();
   return (
     <TouchableOpacity
@@ -41,14 +41,14 @@ export default function ManagerDashboardScreen() {
       title: 'Active Members',
       value: isLoading ? '...' : overview.activeMembers ?? 0,
       subtitle: `${overview.totalMembers ?? 0} total`,
-      gradientColors: ['#8b5cf6', '#6d28d9'],
+      gradientColors: ['#059669', '#10b981'],
       icon: ({ size, color }) => <Ionicons name="people" size={size} color={color} />,
     },
     {
       title: 'Rooms',
       value: isLoading ? '...' : `${overview.occupiedRooms ?? 0}/${overview.totalRooms ?? 0}`,
       subtitle: `${overview.availableRooms ?? 0} available`,
-      gradientColors: ['#3b82f6', '#2563eb'],
+      gradientColors: ['#047857', '#059669'],
       icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
     },
     {
@@ -85,7 +85,7 @@ export default function ManagerDashboardScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#a78bfa" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
       >
         <View style={styles.content}>
           {/* Header */}
@@ -120,12 +120,12 @@ export default function ManagerDashboardScreen() {
 
           {/* Management Nav */}
           <Text style={styles.sectionTitle}>Management</Text>
-          <NavCard icon="people-outline" label="Members" route="/(manager)/members" color="#8b5cf6" />
-          <NavCard icon="bed-outline"    label="Rooms"   route="/(manager)/rooms"   color="#3b82f6" />
+          <NavCard icon="people-outline" label="Members" route="/(manager)/members" color="#34d399" />
+          <NavCard icon="bed-outline"    label="Rooms"   route="/(manager)/rooms"   color="#10b981" />
           <NavCard icon="alert-circle-outline" label="Complaints" route="/(manager)/complaints" color="#f59e0b" />
-          <NavCard icon="megaphone-outline" label="Notices" route="/(manager)/notices" color="#10b981" />
-          <NavCard icon="restaurant-outline" label="Meals" route="/(manager)/meals" color="#f59e0b" />
-          <NavCard icon="cart-outline"   label="Market Schedule" route="/(manager)/market" color="#a78bfa" />
+          <NavCard icon="megaphone-outline" label="Notices" route="/(manager)/notices" color="#059669" />
+          <NavCard icon="restaurant-outline" label="Meals" route="/(manager)/meals" color="#10b981" />
+          <NavCard icon="cart-outline"   label="Market Schedule" route="/(manager)/market" color="#34d399" />
           <NavCard icon="settings-outline" label="Dorm Settings" route="/(manager)/settings" color="#64748b" />
         </View>
       </ScrollView>

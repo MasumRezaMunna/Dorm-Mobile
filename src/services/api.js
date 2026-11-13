@@ -1,36 +1,16 @@
 /**
- * Centralized Axios instance for the 11/38 Home Mobile App.
+ * Centralized Axios instance for the Dorm Solution Mobile App.
  *
- * Configured for seamless public read access to dorm data without requiring
- * user login or JWT tokens.
+ * Always targets the production Render backend.
+ * EXPO_PUBLIC_API_URL is baked in by Metro at bundle time from .env
+ * Hard-coded fallback guarantees dev mode also hits the live server.
  */
 import axios from 'axios';
-import Constants from 'expo-constants';
 
-/**
- * Derives the API base URL automatically in development.
- * Expo exposes the Metro bundler host (e.g. "192.168.1.105:8081").
- * In production or EAS builds, uses the EXPO_PUBLIC_API_URL env var.
- */
-const getApiBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  if (__DEV__) {
-    const hostUri =
-      Constants.expoConfig?.hostUri ??
-      Constants.manifest2?.extra?.expoClient?.hostUri ??
-      Constants.manifest?.debuggerHost;
+const PRODUCTION_URL = 'https://dorm-server.onrender.com/api';
 
-    if (hostUri) {
-      const ip = hostUri.split(':')[0];
-      return `http://${ip}:5000/api`;
-    }
-  }
-  return 'http://localhost:5000/api';
-};
-
-export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || PRODUCTION_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -40,7 +20,7 @@ const api = axios.create({
   },
 });
 
-// Response Interceptor for graceful error handling
+// Response interceptor — graceful error logging
 api.interceptors.response.use(
   (response) => response,
   (error) => {

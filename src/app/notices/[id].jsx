@@ -1,7 +1,10 @@
 /**
- * Notice Detail Screen — full content of a single notice.
+ * Notice Detail Screen — Full content of a single notice with bookmarking,
+ * sharing capabilities, and high readability styling.
+ * Theme: Dark Green Aesthetic
  */
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,48 +13,87 @@ import { useNoticeById } from '../../features/notices/hooks/useNotices';
 import Badge from '../../components/ui/Badge';
 import Colors from '../../constants/colors';
 import { formatDate } from '../../utils/helpers';
+import { useBookmarkStore } from '../../store/bookmarkStore';
 
 export default function NoticeDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { data: notice, isLoading } = useNoticeById(id);
 
+  const isBookmarked = useBookmarkStore((state) => state.bookmarkedIds.includes(id));
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+
+  const handleShare = async () => {
+    if (!notice) return;
+    try {
+      await Share.share({
+        title: notice.title,
+        message: `📢 [Dorm Solution Notice] ${notice.title}\n\n${notice.content}\n\nPublished: ${formatDate(notice.createdAt)}`,
+      });
+    } catch (e) {
+      // dismissed
+    }
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.bg} />
+      {/* Header Bar */}
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={Colors.dark.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notice</Text>
+        <Text style={styles.headerTitle}>Announcement</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={() => toggleBookmark(id)}
+            style={styles.actionIconBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+              size={20}
+              color={isBookmarked ? '#34d399' : Colors.dark.text}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleShare} style={styles.actionIconBtn} activeOpacity={0.7}>
+            <Ionicons name="share-social-outline" size={20} color={Colors.dark.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isLoading ? (
         <View style={styles.loadingWrapper}>
           <View style={styles.skeletonLine} />
-          <View style={[styles.skeletonLine, { width: '60%', marginTop: 12 }]} />
+          <View style={[styles.skeletonLine, { width: '70%', marginTop: 12 }]} />
+          <View style={[styles.skeletonLine, { width: '90%', height: 100, marginTop: 24 }]} />
         </View>
       ) : !notice ? (
         <View style={styles.centered}>
-          <Text style={styles.notFound}>Notice not found.</Text>
+          <Ionicons name="alert-circle-outline" size={48} color={Colors.dark.textDim} />
+          <Text style={styles.notFound}>Notice not found or removed.</Text>
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {notice.isPinned && (
             <View style={styles.pinnedBanner}>
-              <Ionicons name="pin" size={14} color="#f59e0b" />
-              <Text style={styles.pinnedText}>Pinned Notice</Text>
+              <Ionicons name="pin" size={14} color="#10b981" />
+              <Text style={styles.pinnedText}>Pinned Dorm Announcement</Text>
             </View>
           )}
 
           <Text style={styles.title}>{notice.title}</Text>
 
           <View style={styles.metaRow}>
-            <Badge label={notice.priority} colorKey={notice.priority} />
+            <Badge label={notice.priority} />
             <Text style={styles.date}>{formatDate(notice.createdAt)}</Text>
           </View>
 
           {notice.expiresAt && (
-            <Text style={styles.expires}>Expires: {formatDate(notice.expiresAt)}</Text>
+            <View style={styles.expiresRow}>
+              <Ionicons name="time-outline" size={14} color={Colors.dark.textDim} />
+              <Text style={styles.expires}>Active until: {formatDate(notice.expiresAt)}</Text>
+            </View>
           )}
 
           <View style={styles.divider} />
@@ -66,98 +108,123 @@ export default function NoticeDetailScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.dark.bg,
+    backgroundColor: Colors.dark.bg, // #0f172a
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.border,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.dark.card,
+    width: 38,
+    height: 38,
     borderRadius: 12,
+    backgroundColor: Colors.dark.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.dark.border,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: Colors.dark.text,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.dark.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
   scroll: {
-    paddingHorizontal: 16,
-    paddingBottom: 48,
+    padding: 20,
+    paddingBottom: 40,
   },
   pinnedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245,158,11,0.1)',
+    backgroundColor: 'rgba(6, 78, 59, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 16,
     alignSelf: 'flex-start',
+    marginBottom: 14,
   },
   pinnedText: {
     fontSize: 12,
-    color: '#f59e0b',
-    fontWeight: '600',
+    color: '#34d399',
+    fontWeight: '700',
   },
   title: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.dark.text,
+    lineHeight: 28,
     marginBottom: 12,
-    lineHeight: 30,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    gap: 10,
+    marginBottom: 10,
   },
   date: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.dark.textDim,
+  },
+  expiresRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
   },
   expires: {
     fontSize: 12,
-    color: '#f59e0b',
-    marginBottom: 12,
+    color: Colors.dark.textDim,
   },
   divider: {
     height: 1,
     backgroundColor: Colors.dark.border,
-    marginVertical: 20,
+    marginVertical: 18,
   },
   content: {
     fontSize: 15,
     color: Colors.dark.textMuted,
-    lineHeight: 26,
+    lineHeight: 24,
   },
   loadingWrapper: {
-    padding: 24,
+    padding: 20,
   },
   skeletonLine: {
     height: 20,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 8,
-    width: '90%',
+    width: '100%',
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 6,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
   notFound: {
-    color: Colors.dark.textMuted,
+    color: Colors.dark.textDim,
+    fontSize: 15,
   },
 });

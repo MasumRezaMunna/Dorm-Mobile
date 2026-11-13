@@ -1,11 +1,10 @@
 /**
- * Home Tab — Dorm Solution Main Dashboard
- * Displays live dorm overview, statistics, quick actions, today's market team,
- * meal menu preview, and recent announcements.
- *
- * All data is fetched from public read-only endpoints without login.
+ * Home Tab — Dorm Solution Premium Dashboard
+ * Designed with a sleek, modern visual hierarchy, instant status cards,
+ * today's meal schedule, bazar roster, and offline-friendly announcements.
  */
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,18 +15,23 @@ import { usePublicOverview } from '../../features/dashboard/hooks/useDashboard';
 import { useWeeklyPlan } from '../../features/meals/hooks/useMeals';
 import StatCard from '../../components/shared/StatCard';
 import NoticeCard from '../../components/shared/NoticeCard';
+import DormLogo from '../../components/shared/DormLogo';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 import { formatCurrency, formatDate, getMonthName } from '../../utils/helpers';
 
-// ─── Quick Action Item ────────────────────────────────────────────────────────
-function QuickAction({ icon, label, onPress, color = '#7c3aed' }) {
+function QuickAction({ icon, label, onPress, color = '#8b5cf6', badge = null }) {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.quickBtn}>
-      <View style={[styles.quickIcon, { backgroundColor: `${color}22` }]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.78} style={styles.quickBtn}>
+      <View style={[styles.quickIcon, { backgroundColor: `${color}18` }]}>
         <Ionicons name={icon} size={22} color={color} />
+        {badge ? (
+          <View style={styles.actionBadge}>
+            <Text style={styles.actionBadgeText}>{badge}</Text>
+          </View>
+        ) : null}
       </View>
-      <Text style={styles.quickLabel}>{label}</Text>
+      <Text style={styles.quickLabel} numberOfLines={1}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -37,34 +41,37 @@ export default function HomeScreen() {
   const { data, isLoading, refetch, isRefetching } = usePublicOverview();
   const { data: weeklyPlan } = useWeeklyPlan();
 
-  const currentMonthName = data?.month ? getMonthName(data.month) : getMonthName(new Date().getMonth() + 1);
+  const currentMonthName = useMemo(() => {
+    return data?.month ? getMonthName(data.month) : getMonthName(new Date().getMonth() + 1);
+  }, [data?.month]);
+
   const currentYear = data?.year || new Date().getFullYear();
 
-  // ─── Dorm Statistics Cards ──────────────────────────────────────────────────
-  const stats = [
+  // Primary live stats
+  const stats = useMemo(() => [
     {
-      title: 'Active Members',
+      title: 'Active Residents',
       value: isLoading ? '...' : (data?.activeMembers ?? 0),
-      subtitle: `${data?.totalMembers ?? 0} total residents`,
+      subtitle: `${data?.totalMembers ?? 0} total registered`,
       gradientColors: ['#8b5cf6', '#6d28d9'],
       icon: ({ size, color }) => <Ionicons name="people" size={size} color={color} />,
     },
     {
-      title: 'Rooms Occupancy',
+      title: 'Rooms Capacity',
       value: isLoading ? '...' : `${data?.occupiedRooms ?? 0}/${data?.totalRooms ?? 0}`,
-      subtitle: `${data?.availableRooms ?? 0} available`,
+      subtitle: `${data?.availableRooms ?? 0} seats open`,
       gradientColors: ['#3b82f6', '#2563eb'],
       icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
     },
     {
-      title: 'Total Meals',
+      title: 'Monthly Meals',
       value: isLoading ? '...' : (data?.totalMeals ?? 0),
-      subtitle: `In ${currentMonthName}`,
+      subtitle: `${currentMonthName} count`,
       gradientColors: ['#f59e0b', '#ea580c'],
       icon: ({ size, color }) => <Ionicons name="restaurant" size={size} color={color} />,
     },
     {
-      title: 'Meal Rate',
+      title: 'Current Rate',
       value: isLoading ? '...' : formatCurrency(data?.mealRate ?? 0),
       subtitle: 'Average per meal',
       gradientColors: ['#10b981', '#059669'],
@@ -80,22 +87,22 @@ export default function HomeScreen() {
     {
       title: 'Total Expenses',
       value: isLoading ? '...' : formatCurrency(data?.monthlyExpenses ?? 0),
-      subtitle: 'Grocery + Common',
+      subtitle: 'Grocery & Common',
       gradientColors: ['#6366f1', '#4338ca'],
       icon: ({ size, color }) => <Ionicons name="wallet" size={size} color={color} />,
     },
-  ];
+  ], [data, isLoading, currentMonthName]);
 
   const notices = data?.recentNotices || [];
   const todayTeam = data?.todayMarketTeam;
 
-  // Derive today's meal if available
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayName = dayNames[new Date().getDay()];
   const todayMenu = weeklyPlan?.days?.find((d) => d.dayName === todayName);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -108,112 +115,110 @@ export default function HomeScreen() {
         }
       >
         <View style={styles.content}>
-          {/* Header */}
+          {/* Top Brand & Status Bar */}
           <View style={styles.header}>
-            <View>
-              <View style={styles.brandBadge}>
-                <Ionicons name="home" size={14} color="#a78bfa" />
-                <Text style={styles.brandBadgeText}>Dorm Solution</Text>
-              </View>
-              <Text style={styles.greeting}>{data?.dormName || '11/38 Home'}</Text>
-              <Text style={styles.subGreeting}>
-                {data?.address ? data.address : 'Dorm Management System'}
-              </Text>
-            </View>
-            <View style={styles.liveBadge}>
+            <DormLogo
+              size={42}
+              subtitle={data?.dormName ? `${data.dormName} • Live System` : 'Dormitory Management'}
+            />
+            <View style={styles.liveIndicator}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>Live</Text>
+              <Text style={styles.liveText}>SYNCED</Text>
             </View>
           </View>
 
-          {/* Quick Actions Grid */}
-          <Text style={styles.sectionTitle}>Quick Access</Text>
-          <View style={styles.quickGrid}>
-            <QuickAction
-              icon="megaphone-outline"
-              label="Notices"
-              color="#a78bfa"
-              onPress={() => router.push('/(tabs)/notices')}
-            />
-            <QuickAction
-              icon="restaurant-outline"
-              label="Meals & Plan"
-              color="#10b981"
-              onPress={() => router.push('/meals')}
-            />
-            <QuickAction
-              icon="cart-outline"
-              label="Market Team"
-              color="#f59e0b"
-              onPress={() => router.push('/market')}
-            />
-            <QuickAction
-              icon="bed-outline"
-              label="Rooms"
-              color="#3b82f6"
-              onPress={() => router.push('/room')}
-            />
-            <QuickAction
-              icon="people-outline"
-              label="Community"
-              color="#8b5cf6"
-              onPress={() => router.push('/(tabs)/community')}
-            />
-            <QuickAction
-              icon="wallet-outline"
-              label="Expenses"
-              color="#ec4899"
-              onPress={() => router.push('/(manager)/expenses')}
-            />
+          {/* Quick Access Action Hub */}
+          <View style={styles.quickActionsContainer}>
+            <Text style={styles.sectionHeading}>Quick Services</Text>
+            <View style={styles.quickGrid}>
+              <QuickAction
+                icon="megaphone-outline"
+                label="Notices"
+                color="#a78bfa"
+                badge={notices.length > 0 ? `${notices.length}` : null}
+                onPress={() => router.push('/(tabs)/notices')}
+              />
+              <QuickAction
+                icon="restaurant-outline"
+                label="Meal Plan"
+                color="#10b981"
+                onPress={() => router.push('/(tabs)/meals')}
+              />
+              <QuickAction
+                icon="cart-outline"
+                label="Bazar Duty"
+                color="#f59e0b"
+                onPress={() => router.push('/(tabs)/market')}
+              />
+              <QuickAction
+                icon="bed-outline"
+                label="Room Hub"
+                color="#3b82f6"
+                onPress={() => router.push('/(tabs)/community')}
+              />
+              <QuickAction
+                icon="people-outline"
+                label="Residents"
+                color="#8b5cf6"
+                onPress={() => router.push('/(tabs)/community')}
+              />
+              <QuickAction
+                icon="call-outline"
+                label="Helpline"
+                color="#ec4899"
+                onPress={() => router.push('/settings')}
+              />
+            </View>
           </View>
 
-          {/* Today's Market Team Card */}
+          {/* Today's Market Team Highlight */}
           {todayTeam && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.cardHighlight}>
-              <View style={styles.cardHighlightHeader}>
-                <View style={styles.highlightBadge}>
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.highlightCardMarket}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.highlightBadgeMarket}>
                   <Ionicons name="basket" size={14} color="#f59e0b" />
-                  <Text style={styles.highlightBadgeText}>Today's Bazar Duty</Text>
+                  <Text style={styles.highlightBadgeTextMarket}>Today's Bazar Team</Text>
                 </View>
                 <Text style={styles.highlightDate}>{formatDate(todayTeam.marketDate)}</Text>
               </View>
               <Text style={styles.teamMembersText}>
                 {(todayTeam.members || []).map((m) => m.name || m.userId?.displayName || 'Resident').join(', ')}
               </Text>
-              {todayTeam.note && (
+              {todayTeam.note ? (
                 <Text style={styles.teamNoteText}>Note: {todayTeam.note}</Text>
-              )}
+              ) : null}
             </Animated.View>
           )}
 
-          {/* Today's Menu Preview */}
+          {/* Today's Dining Menu */}
           {todayMenu && (
-            <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.cardMenu}>
-              <View style={styles.cardHighlightHeader}>
-                <View style={[styles.highlightBadge, { backgroundColor: 'rgba(16,185,129,0.1)' }]}>
+            <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.highlightCardMeals}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.highlightBadgeMeals}>
                   <Ionicons name="restaurant" size={14} color="#10b981" />
-                  <Text style={[styles.highlightBadgeText, { color: '#10b981' }]}>Today's Menu ({todayName})</Text>
+                  <Text style={styles.highlightBadgeTextMeals}>Today's Dining ({todayName})</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/meals')}>
-                  <Text style={styles.seeAll}>Full Plan</Text>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/meals')}>
+                  <Text style={styles.linkText}>Weekly Menu →</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.menuItemRow}>
-                <Ionicons name="sunny-outline" size={14} color="#f59e0b" />
+                <Ionicons name="sunny-outline" size={15} color="#f59e0b" />
                 <Text style={styles.menuLabel}>Lunch:</Text>
-                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.lunch || 'Not specified'}</Text>
+                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.lunch || 'Standard menu'}</Text>
               </View>
               <View style={styles.menuItemRow}>
-                <Ionicons name="moon-outline" size={14} color="#a78bfa" />
+                <Ionicons name="moon-outline" size={15} color="#a78bfa" />
                 <Text style={styles.menuLabel}>Dinner:</Text>
-                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.dinner || 'Not specified'}</Text>
+                <Text style={styles.menuValue} numberOfLines={1}>{todayMenu.dinner || 'Standard menu'}</Text>
               </View>
             </Animated.View>
           )}
 
-          {/* Overview Stats Grid */}
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>Dorm Statistics ({currentMonthName} {currentYear})</Text>
+          {/* Dorm Overview Statistics Grid */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Financial & Dorm Overview</Text>
+            <Text style={styles.sectionSubtext}>{currentMonthName} {currentYear}</Text>
           </View>
           {isLoading ? (
             <View style={styles.statsGrid}>
@@ -222,28 +227,28 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.statsGrid}>
               {stats.map((stat, i) => (
-                <Animated.View key={stat.title} entering={FadeInDown.delay(i * 60).springify()} style={styles.statItem}>
+                <Animated.View key={stat.title} entering={FadeInDown.delay(i * 40)} style={styles.statItem}>
                   <StatCard {...stat} />
                 </Animated.View>
               ))}
             </View>
           )}
 
-          {/* Recent Notices Section */}
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>Announcements & Notices</Text>
+          {/* Latest Announcements */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Latest Notices</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/notices')}>
-              <Text style={styles.seeAll}>See all</Text>
+              <Text style={styles.linkText}>View Board →</Text>
             </TouchableOpacity>
           </View>
           {notices.length === 0 && !isLoading ? (
             <View style={styles.emptyNoticeBox}>
-              <Ionicons name="megaphone-outline" size={24} color={Colors.dark.textDim} />
-              <Text style={styles.emptyNoticeText}>No announcements posted yet</Text>
+              <Ionicons name="megaphone-outline" size={26} color={Colors.dark.textDim} />
+              <Text style={styles.emptyNoticeText}>No announcements posted</Text>
             </View>
           ) : (
             notices.slice(0, 3).map((notice, i) => (
-              <Animated.View key={notice._id || i} entering={FadeInDown.delay(i * 60)}>
+              <Animated.View key={notice._id || i} entering={FadeInDown.delay(i * 50)}>
                 <NoticeCard
                   notice={notice}
                   onPress={() => router.push(`/notices/${notice._id}`)}
@@ -262,52 +267,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.dark.bg,
   },
-  scroll: { flex: 1 },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
+    paddingVertical: 6,
   },
-  brandBadge: {
+  liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(167,139,250,0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    marginBottom: 6,
-  },
-  brandBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#a78bfa',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: Colors.dark.text,
-    letterSpacing: -0.4,
-  },
-  subGreeting: {
-    fontSize: 13,
-    color: Colors.dark.textMuted,
-    marginTop: 2,
-  },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(16,185,129,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     borderWidth: 1,
     borderColor: 'rgba(16,185,129,0.3)',
     paddingHorizontal: 10,
@@ -321,25 +300,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   liveText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
     color: '#10b981',
+    letterSpacing: 0.6,
   },
-  sectionTitle: {
+  quickActionsContainer: {
+    marginBottom: 14,
+  },
+  sectionHeading: {
     fontSize: 16,
     fontWeight: '700',
     color: Colors.dark.text,
-    marginBottom: 12,
-    marginTop: 18,
+    letterSpacing: -0.2,
   },
-  sectionRow: {
+  sectionSubtext: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
+  },
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
-    marginTop: 20,
+    marginTop: 22,
   },
-  seeAll: {
+  linkText: {
     fontSize: 13,
     color: '#a78bfa',
     fontWeight: '600',
@@ -348,7 +334,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 8,
+    marginTop: 10,
   },
   quickBtn: {
     alignItems: 'center',
@@ -358,7 +344,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.dark.border,
     paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   quickIcon: {
     width: 44,
@@ -367,57 +353,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    position: 'relative',
+  },
+  actionBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#8b5cf6',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  actionBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   quickLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.dark.text,
     fontWeight: '600',
     textAlign: 'center',
   },
-  cardHighlight: {
-    backgroundColor: 'rgba(245,158,11,0.08)',
-    borderRadius: 16,
+  highlightCardMarket: {
+    backgroundColor: 'rgba(245,158,11,0.07)',
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.2)',
-    padding: 16,
-    marginTop: 14,
-  },
-  cardMenu: {
-    backgroundColor: 'rgba(16,185,129,0.08)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.2)',
+    borderColor: 'rgba(245,158,11,0.22)',
     padding: 16,
     marginTop: 12,
   },
-  cardHighlightHeader: {
+  highlightCardMeals: {
+    backgroundColor: 'rgba(16,185,129,0.07)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.22)',
+    padding: 16,
+    marginTop: 12,
+  },
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  highlightBadge: {
+  highlightBadgeMarket: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245,158,11,0.15)',
+    backgroundColor: 'rgba(245,158,11,0.18)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  highlightBadgeText: {
+  highlightBadgeTextMarket: {
     fontSize: 11,
     fontWeight: '700',
     color: '#f59e0b',
   },
-  highlightDate: {
+  highlightBadgeMeals: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16,185,129,0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  highlightBadgeTextMeals: {
     fontSize: 11,
+    fontWeight: '700',
+    color: '#10b981',
+  },
+  highlightDate: {
+    fontSize: 12,
     color: Colors.dark.textDim,
   },
   teamMembersText: {
     fontSize: 14,
     fontWeight: '700',
     color: Colors.dark.text,
+    lineHeight: 20,
   },
   teamNoteText: {
     fontSize: 12,
@@ -451,9 +470,9 @@ const styles = StyleSheet.create({
   },
   emptyNoticeBox: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 28,
     backgroundColor: Colors.dark.card,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.dark.border,
     gap: 8,

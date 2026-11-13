@@ -1,9 +1,9 @@
 /**
- * Meals Screen — Weekly Meal Menu, Monthly Transparency Breakdown & Daily Entries.
- * Displays public meal information synchronized with the backend database.
+ * Meals Screen — Weekly Meal Schedule & Monthly Financial Transparency.
+ * High-performance tabbed interface with Day Highlight and clean cards.
  */
-import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,9 +15,9 @@ import Colors from '../../constants/colors';
 import { formatDate, getMonthName, getCurrentMonthYear, formatCurrency } from '../../utils/helpers';
 
 const TABS = [
-  { key: 'weekly', label: 'Weekly Menu' },
+  { key: 'weekly', label: 'Weekly Schedule' },
   { key: 'summary', label: 'Monthly Summary' },
-  { key: 'entries', label: 'Daily Entries' },
+  { key: 'entries', label: 'Daily Logs' },
 ];
 
 export default function MealsTabScreen() {
@@ -37,12 +37,15 @@ export default function MealsTabScreen() {
   };
 
   const daysList = weeklyPlan?.days || [];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = dayNames[new Date().getDay()];
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#0f0f23" />
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Meals & Menu</Text>
+        <Text style={styles.title}>Meals & Dining</Text>
         <Text style={styles.subtitle}>{getMonthName(month)} {year} • Public Meal Board</Text>
       </View>
 
@@ -76,43 +79,55 @@ export default function MealsTabScreen() {
             ) : daysList.length === 0 ? (
               <EmptyState
                 icon={({ size, color }) => <Ionicons name="restaurant-outline" size={size} color={color} />}
-                title="No weekly plan set"
-                subtitle="The meal plan will appear once updated by the manager."
+                title="No weekly plan published"
+                subtitle="The weekly dining menu will appear here once updated."
               />
             ) : (
-              daysList.map((d, index) => (
-                <View key={d.dayName || index} style={styles.weeklyCard}>
-                  <View style={styles.dayHeader}>
-                    <Text style={styles.dayName}>{d.dayName}</Text>
-                    <View style={styles.dayPill}>
-                      <Ionicons name="calendar-outline" size={12} color="#a78bfa" />
-                      <Text style={styles.dayPillText}>Schedule</Text>
+              daysList.map((d, index) => {
+                const isToday = d.dayName === todayName;
+                return (
+                  <View key={d.dayName || index} style={[styles.weeklyCard, isToday && styles.weeklyCardToday]}>
+                    <View style={styles.dayHeader}>
+                      <View style={styles.dayTitleRow}>
+                        <Text style={[styles.dayName, isToday && styles.dayNameToday]}>{d.dayName}</Text>
+                        {isToday && (
+                          <View style={styles.todayBadge}>
+                            <Text style={styles.todayBadgeText}>TODAY</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.dayPill}>
+                        <Ionicons name="calendar-outline" size={12} color="#a78bfa" />
+                        <Text style={styles.dayPillText}>Routine</Text>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={styles.mealBox}>
-                    <View style={styles.mealIconBadge}>
-                      <Ionicons name="sunny" size={16} color="#f59e0b" />
+                    {/* Lunch */}
+                    <View style={styles.mealBox}>
+                      <View style={styles.mealIconBadge}>
+                        <Ionicons name="sunny" size={16} color="#f59e0b" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.mealTypeTitle}>Lunch</Text>
+                        <Text style={styles.mealMenuText}>{d.lunch || 'Standard menu'}</Text>
+                        {d.lunchNote ? <Text style={styles.mealNote}>Note: {d.lunchNote}</Text> : null}
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.mealTypeTitle}>Lunch</Text>
-                      <Text style={styles.mealMenuText}>{d.lunch || 'Standard menu'}</Text>
-                      {d.lunchNote ? <Text style={styles.mealNote}>Note: {d.lunchNote}</Text> : null}
-                    </View>
-                  </View>
 
-                  <View style={[styles.mealBox, { marginTop: 8 }]}>
-                    <View style={[styles.mealIconBadge, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
-                      <Ionicons name="moon" size={16} color="#a78bfa" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.mealTypeTitle, { color: '#a78bfa' }]}>Dinner</Text>
-                      <Text style={styles.mealMenuText}>{d.dinner || 'Standard menu'}</Text>
-                      {d.dinnerNote ? <Text style={styles.mealNote}>Note: {d.dinnerNote}</Text> : null}
+                    {/* Dinner */}
+                    <View style={[styles.mealBox, { marginTop: 8 }]}>
+                      <View style={[styles.mealIconBadge, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
+                        <Ionicons name="moon" size={16} color="#a78bfa" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.mealTypeTitle}>Dinner</Text>
+                        <Text style={styles.mealMenuText}>{d.dinner || 'Standard menu'}</Text>
+                        {d.dinnerNote ? <Text style={styles.mealNote}>Note: {d.dinnerNote}</Text> : null}
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))
+                );
+              })
             )}
           </>
         )}
@@ -122,55 +137,50 @@ export default function MealsTabScreen() {
           <>
             {summaryLoading ? (
               <View style={{ gap: 10 }}>
-                {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
+                {[1, 2].map((i) => <CardSkeleton key={i} />)}
               </View>
             ) : !summary ? (
               <EmptyState
-                icon={({ size, color }) => <Ionicons name="stats-chart-outline" size={size} color={color} />}
-                title="No summary data"
+                icon={({ size, color }) => <Ionicons name="calculator-outline" size={size} color={color} />}
+                title="Summary not available"
+                subtitle="Monthly meal metrics will appear as meals are logged."
               />
             ) : (
               <>
-                {/* Summary Metrics */}
-                <View style={styles.metricsGrid}>
-                  <View style={styles.metricCard}>
-                    <Text style={styles.metricVal}>{summary.totalMeals || 0}</Text>
-                    <Text style={styles.metricLbl}>Total Meals</Text>
-                  </View>
-                  <View style={styles.metricCard}>
-                    <Text style={[styles.metricVal, { color: '#10b981' }]}>
-                      ৳{(summary.mealRate || 0).toFixed(2)}
-                    </Text>
-                    <Text style={styles.metricLbl}>Meal Rate</Text>
-                  </View>
-                  <View style={styles.metricCard}>
-                    <Text style={[styles.metricVal, { color: '#f59e0b' }]}>
-                      {formatCurrency(summary.groceryTotal || 0)}
-                    </Text>
-                    <Text style={styles.metricLbl}>Grocery Cost</Text>
-                  </View>
-                  <View style={styles.metricCard}>
-                    <Text style={[styles.metricVal, { color: '#8b5cf6' }]}>
-                      {formatCurrency(summary.commonCostPerMember || 0)}
-                    </Text>
-                    <Text style={styles.metricLbl}>Common / Member</Text>
+                <View style={styles.summaryOverviewCard}>
+                  <Text style={styles.summaryTitle}>Month Financial Overview</Text>
+                  <View style={styles.statGrid2}>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statBoxLabel}>Total Meals</Text>
+                      <Text style={styles.statBoxVal}>{summary.totalMeals ?? 0}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statBoxLabel}>Meal Rate</Text>
+                      <Text style={styles.statBoxVal}>{formatCurrency(summary.mealRate ?? 0)}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statBoxLabel}>Grocery Cost</Text>
+                      <Text style={styles.statBoxVal}>{formatCurrency(summary.totalGroceryCost ?? 0)}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statBoxLabel}>Common Cost</Text>
+                      <Text style={styles.statBoxVal}>{formatCurrency(summary.totalCommonCost ?? 0)}</Text>
+                    </View>
                   </View>
                 </View>
 
                 {/* Per Member Breakdown */}
-                <Text style={styles.sectionHeading}>Resident Breakdown ({summary.members?.length || 0})</Text>
-                {(summary.members || []).map((m, i) => (
-                  <View key={m.memberId || i} style={styles.memberBreakdownCard}>
-                    <Avatar uri={m.photoURL} name={m.name} size={40} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.memberName}>{m.name}</Text>
-                      <Text style={styles.memberMeta}>
-                        Room {m.roomNumber} • {m.totalMeals} meals ({m.totalLunch}L / {m.totalDinner}D)
-                      </Text>
+                <Text style={styles.subSectionTitle}>Resident Breakdown</Text>
+                {(summary.memberSummaries || []).map((m, i) => (
+                  <View key={m.userId?._id || i} style={styles.memberSummaryCard}>
+                    <Avatar name={m.name || 'Member'} size={40} />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.memberName}>{m.name || 'Resident'}</Text>
+                      <Text style={styles.memberSub}>{m.totalMeals ?? 0} meals recorded</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.memberCostVal}>{formatCurrency(m.totalCost)}</Text>
-                      <Text style={styles.memberCostLbl}>Food + Common</Text>
+                      <Text style={styles.memberCost}>{formatCurrency(m.totalCost ?? 0)}</Text>
+                      <Text style={styles.memberCostSub}>Total Share</Text>
                     </View>
                   </View>
                 ))}
@@ -188,37 +198,35 @@ export default function MealsTabScreen() {
               </View>
             ) : entries.length === 0 ? (
               <EmptyState
-                icon={({ size, color }) => <Ionicons name="list-outline" size={size} color={color} />}
-                title="No daily entries recorded"
-                subtitle="Daily meals will appear here as recorded by the manager."
+                icon={({ size, color }) => <Ionicons name="calendar-outline" size={size} color={color} />}
+                title="No daily logs found"
+                subtitle="Daily logs appear once daily counts are entered."
               />
             ) : (
-              entries.map((entry, i) => {
-                const memberName = entry.memberId?.userId?.displayName || 'Resident';
-                return (
-                  <View key={entry._id || i} style={styles.entryRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.entryMemberName}>{memberName}</Text>
-                      <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-                    </View>
-                    <View style={styles.entryTags}>
-                      {entry.lunch > 0 && (
-                        <View style={styles.tagLunch}>
-                          <Text style={styles.tagLunchText}>{entry.lunch} Lunch</Text>
-                        </View>
-                      )}
-                      {entry.dinner > 0 && (
-                        <View style={styles.tagDinner}>
-                          <Text style={styles.tagDinnerText}>{entry.dinner} Dinner</Text>
-                        </View>
-                      )}
-                      <View style={styles.tagTotal}>
-                        <Text style={styles.tagTotalText}>{entry.mealCount} Total</Text>
-                      </View>
+              entries.map((entry, idx) => (
+                <View key={entry._id || idx} style={styles.entryCard}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
+                    <View style={styles.entryBadge}>
+                      <Text style={styles.entryBadgeText}>
+                        Total: {(entry.lunchCount || 0) + (entry.dinnerCount || 0)} meals
+                      </Text>
                     </View>
                   </View>
-                );
-              })
+                  <View style={styles.entryRow}>
+                    <View style={styles.entryMealCol}>
+                      <Ionicons name="sunny-outline" size={14} color="#f59e0b" />
+                      <Text style={styles.entryMealLabel}>Lunch: </Text>
+                      <Text style={styles.entryMealCount}>{entry.lunchCount ?? 0}</Text>
+                    </View>
+                    <View style={styles.entryMealCol}>
+                      <Ionicons name="moon-outline" size={14} color="#a78bfa" />
+                      <Text style={styles.entryMealLabel}>Dinner: </Text>
+                      <Text style={styles.entryMealCount}>{entry.dinnerCount ?? 0}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))
             )}
           </>
         )}
@@ -228,39 +236,69 @@ export default function MealsTabScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark.bg },
-  header: { paddingHorizontal: 16, paddingTop: 12, marginBottom: 12 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.dark.text },
-  subtitle: { fontSize: 13, color: Colors.dark.textMuted, marginTop: 2 },
+  root: {
+    flex: 1,
+    backgroundColor: Colors.dark.bg,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: Colors.dark.text,
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: Colors.dark.textDim,
+    marginTop: 2,
+  },
   tabRow: {
     flexDirection: 'row',
-    gap: 8,
     paddingHorizontal: 16,
-    marginBottom: 14,
+    gap: 8,
+    marginBottom: 12,
   },
   tabPill: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: Colors.dark.card,
+    paddingVertical: 9,
+    borderRadius: 14,
+    backgroundColor: Colors.dark.surface,
     borderWidth: 1,
     borderColor: Colors.dark.border,
   },
   tabPillActive: {
-    backgroundColor: 'rgba(124,58,237,0.2)',
+    backgroundColor: '#7c3aed',
     borderColor: '#7c3aed',
   },
-  tabText: { fontSize: 12, fontWeight: '600', color: Colors.dark.textMuted },
-  tabTextActive: { color: '#a78bfa' },
-  scroll: { paddingHorizontal: 16, paddingBottom: 48 },
+  tabText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.dark.textMuted,
+  },
+  tabTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
   weeklyCard: {
     backgroundColor: Colors.dark.card,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.dark.border,
     padding: 16,
     marginBottom: 12,
+  },
+  weeklyCardToday: {
+    borderColor: 'rgba(167, 139, 250, 0.5)',
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
   },
   dayHeader: {
     flexDirection: 'row',
@@ -268,109 +306,195 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  dayName: { fontSize: 16, fontWeight: '700', color: Colors.dark.text },
+  dayTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dayName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
+  dayNameToday: {
+    color: '#a78bfa',
+  },
+  todayBadge: {
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  todayBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
   dayPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(167,139,250,0.1)',
+    backgroundColor: Colors.dark.surface,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 8,
   },
-  dayPillText: { fontSize: 11, color: '#a78bfa', fontWeight: '600' },
+  dayPillText: {
+    fontSize: 11,
+    color: Colors.dark.textDim,
+  },
   mealBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
+    backgroundColor: Colors.dark.surface,
     padding: 12,
+    borderRadius: 12,
   },
   mealIconBadge: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: 'rgba(245,158,11,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mealTypeTitle: { fontSize: 12, fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase' },
-  mealMenuText: { fontSize: 14, fontWeight: '600', color: Colors.dark.text, marginTop: 2 },
-  mealNote: { fontSize: 11, color: Colors.dark.textDim, marginTop: 4 },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 16,
+  mealTypeTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.dark.textDim,
+    textTransform: 'uppercase',
   },
-  metricCard: {
-    width: '48%',
+  mealMenuText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark.text,
+    marginTop: 2,
+  },
+  mealNote: {
+    fontSize: 12,
+    color: Colors.dark.textMuted,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  summaryOverviewCard: {
     backgroundColor: Colors.dark.card,
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    padding: 14,
-    alignItems: 'center',
+    padding: 16,
+    marginBottom: 16,
   },
-  metricVal: { fontSize: 18, fontWeight: '700', color: Colors.dark.text },
-  metricLbl: { fontSize: 11, color: Colors.dark.textDim, marginTop: 4 },
-  sectionHeading: {
+  summaryTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: Colors.dark.text,
-    marginBottom: 10,
-    marginTop: 8,
+    marginBottom: 12,
   },
-  memberBreakdownCard: {
+  statGrid2: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  statBox: {
+    width: '48%',
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 12,
+    padding: 12,
+  },
+  statBoxLabel: {
+    fontSize: 11,
+    color: Colors.dark.textDim,
+    fontWeight: '600',
+  },
+  statBoxVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.dark.text,
+    marginTop: 4,
+  },
+  subSectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.dark.text,
+    marginBottom: 12,
+  },
+  memberSummaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     backgroundColor: Colors.dark.card,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.dark.border,
     padding: 12,
     marginBottom: 8,
   },
-  memberName: { fontSize: 14, fontWeight: '600', color: Colors.dark.text },
-  memberMeta: { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
-  memberCostVal: { fontSize: 14, fontWeight: '700', color: '#10b981' },
-  memberCostLbl: { fontSize: 10, color: Colors.dark.textDim, marginTop: 2 },
-  entryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  memberName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
+  memberSub: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
+    marginTop: 2,
+  },
+  memberCost: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#10b981',
+  },
+  memberCostSub: {
+    fontSize: 11,
+    color: Colors.dark.textDim,
+  },
+  entryCard: {
     backgroundColor: Colors.dark.card,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.dark.border,
     padding: 14,
+    marginBottom: 10,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
-    gap: 10,
   },
-  entryMemberName: { fontSize: 14, fontWeight: '600', color: Colors.dark.text },
-  entryDate: { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
-  entryTags: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  tagLunch: {
-    backgroundColor: 'rgba(245,158,11,0.1)',
+  entryDate: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
+  entryBadge: {
+    backgroundColor: Colors.dark.surface,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 8,
   },
-  tagLunchText: { fontSize: 11, color: '#f59e0b', fontWeight: '600' },
-  tagDinner: {
-    backgroundColor: 'rgba(167,139,250,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  entryBadgeText: {
+    fontSize: 11,
+    color: '#a78bfa',
+    fontWeight: '700',
   },
-  tagDinnerText: { fontSize: 11, color: '#a78bfa', fontWeight: '600' },
-  tagTotal: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  entryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
-  tagTotalText: { fontSize: 11, color: Colors.dark.text, fontWeight: '700' },
+  entryMealCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  entryMealLabel: {
+    fontSize: 13,
+    color: Colors.dark.textMuted,
+  },
+  entryMealCount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
 });
-

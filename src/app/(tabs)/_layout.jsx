@@ -1,11 +1,11 @@
 /**
- * Bottom Tab Navigator for the Dorm Solution Mobile App.
- * Tabs: Home | Notices | Meals | Market | Dorm Hub
- *
- * Provides instant access to all core public website sections without authentication.
+ * Bottom Tab Navigator for Dorm Solution.
+ * Tabs: Home | Notices | Meals | Bazar | Dorm Hub
+ * Modernized with sleek icons, refined typography, and active indicator glow.
  */
+import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../constants/colors';
 
@@ -59,7 +59,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="market"
         options={{
-          title: 'Market',
+          title: 'Bazar',
           tabBarIcon: ({ focused, color }) => (
             <TabBarIcon name="cart" focused={focused} color={color} />
           ),
@@ -74,7 +74,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Hide legacy profile from tab bar */}
+      {/* Hidden auxiliary tab */}
       <Tabs.Screen
         name="profile"
         options={{
@@ -87,15 +87,16 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: Colors.dark.surface,
-    borderTopColor: Colors.dark.border,
+    backgroundColor: '#13131f',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+    height: Platform.OS === 'ios' ? 88 : 66,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
     paddingTop: 8,
+    elevation: 8,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -103,9 +104,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    padding: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   iconFocused: {
-    backgroundColor: 'rgba(167,139,250,0.12)',
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
   },
 });

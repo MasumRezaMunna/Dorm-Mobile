@@ -3,25 +3,22 @@
  * Brings together all core website transparency and facility information.
  */
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, TextInput, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useCommunityStats, useDormSettings } from '../../features/dashboard/hooks/useDashboard';
+import { useCommunityStats } from '../../features/dashboard/hooks/useDashboard';
 import { useRooms } from '../../features/rooms/hooks/useRooms';
-import { useExpenses } from '../../features/expenses/hooks/useExpenses';
 import Avatar from '../../components/ui/Avatar';
 import Badge from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
 import Colors from '../../constants/colors';
-import { formatCurrency, formatDate, getCurrentMonthYear, getMonthName } from '../../utils/helpers';
+import { formatCurrency, getCurrentMonthYear, getMonthName } from '../../utils/helpers';
 
 const SECTIONS = [
   { key: 'members', label: 'Residents' },
   { key: 'rooms', label: 'Rooms' },
-  { key: 'expenses', label: 'Expenses' },
-  { key: 'info', label: 'Dorm Info' },
 ];
 
 export default function DormHubScreen() {
@@ -32,16 +29,12 @@ export default function DormHubScreen() {
   // Data queries
   const { data: members = [], isLoading: membersLoading, refetch: refetchMembers, isRefetching: isRefetchingMembers } = useCommunityStats(month, year);
   const { data: rooms = [], isLoading: roomsLoading, refetch: refetchRooms, isRefetching: isRefetchingRooms } = useRooms();
-  const { data: expenseData, isLoading: expensesLoading, refetch: refetchExpenses, isRefetching: isRefetchingExpenses } = useExpenses(month, year);
-  const { data: settings, isLoading: settingsLoading, refetch: refetchSettings, isRefetching: isRefetchingSettings } = useDormSettings();
 
-  const isRefetching = isRefetchingMembers || isRefetchingRooms || isRefetchingExpenses || isRefetchingSettings;
+  const isRefetching = isRefetchingMembers || isRefetchingRooms;
 
   const handleRefresh = () => {
     refetchMembers();
     refetchRooms();
-    refetchExpenses();
-    refetchSettings();
   };
 
   // Filter members by search query
@@ -52,17 +45,12 @@ export default function DormHubScreen() {
     return nameMatch || roomMatch;
   });
 
-  const expenses = expenseData?.expenses || [];
-  const groceryCost = expenseData?.groceryCost || 0;
-  const commonCost = expenseData?.commonCost || 0;
-  const grandTotal = expenseData?.grandTotal || (groceryCost + commonCost);
-
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Dorm Hub</Text>
-        <Text style={styles.subtitle}>Residents, Rooms, Facilities & Expenses</Text>
+        <Text style={styles.title}>Residents & Rooms</Text>
+        <Text style={styles.subtitle}>Active members, room allocations & capacities</Text>
       </View>
 
       {/* Section Switcher Pills */}
@@ -168,7 +156,7 @@ export default function DormHubScreen() {
                   <View key={room._id} style={styles.roomCard}>
                     <View style={styles.roomCardHeader}>
                       <View style={styles.roomBadge}>
-                        <Ionicons name="bed" size={16} color="#3b82f6" />
+                        <Ionicons name="bed" size={16} color="#10b981" />
                         <Text style={styles.roomNumberText}>Room {room.roomNumber}</Text>
                       </View>
                       <Badge label={room.status || 'available'} colorKey={room.status || 'available'} />
@@ -186,7 +174,7 @@ export default function DormHubScreen() {
                             styles.barFill,
                             {
                               width: `${occPercent}%`,
-                              backgroundColor: occPercent >= 100 ? '#f43f5e' : '#3b82f6',
+                              backgroundColor: occPercent >= 100 ? '#f43f5e' : '#10b981',
                             },
                           ]}
                         />
@@ -213,145 +201,6 @@ export default function DormHubScreen() {
                   </View>
                 );
               })
-            )}
-          </>
-        )}
-
-        {/* ── SECTION 3: EXPENSES ── */}
-        {activeSection === 'expenses' && (
-          <>
-            {expensesLoading ? (
-              <View style={{ gap: 10 }}>
-                {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
-              </View>
-            ) : (
-              <>
-                {/* Summary Cards */}
-                <View style={styles.expenseSummaryRow}>
-                  <View style={styles.expenseSummaryBox}>
-                    <Text style={styles.expenseSummaryVal}>{formatCurrency(groceryCost)}</Text>
-                    <Text style={styles.expenseSummaryLbl}>Grocery Total</Text>
-                  </View>
-                  <View style={styles.expenseSummaryBox}>
-                    <Text style={[styles.expenseSummaryVal, { color: '#10b981' }]}>{formatCurrency(commonCost)}</Text>
-                    <Text style={styles.expenseSummaryLbl}>Common Total</Text>
-                  </View>
-                  <View style={styles.expenseSummaryBox}>
-                    <Text style={[styles.expenseSummaryVal, { color: '#f43f5e' }]}>{formatCurrency(grandTotal)}</Text>
-                    <Text style={styles.expenseSummaryLbl}>Grand Total</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.sectionHeading}>Itemized Expenses ({expenses.length})</Text>
-                {expenses.length === 0 ? (
-                  <EmptyState
-                    icon={({ size, color }) => <Ionicons name="wallet-outline" size={size} color={color} />}
-                    title="No expenses recorded this month"
-                  />
-                ) : (
-                  expenses.map((e, idx) => (
-                    <View key={e._id || idx} style={styles.expenseItemRow}>
-                      <View
-                        style={[
-                          styles.expenseTypeBadge,
-                          { backgroundColor: e.expenseType === 'Grocery' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)' },
-                        ]}
-                      >
-                        <Ionicons
-                          name={e.expenseType === 'Grocery' ? 'cart' : 'construct'}
-                          size={18}
-                          color={e.expenseType === 'Grocery' ? '#f59e0b' : '#10b981'}
-                        />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.expenseTitle}>{e.title || e.description}</Text>
-                        <Text style={styles.expenseDate}>
-                          {formatDate(e.date)} • {e.expenseType}
-                        </Text>
-                        {e.notes ? <Text style={styles.expenseNotes}>{e.notes}</Text> : null}
-                      </View>
-                      <Text style={styles.expenseAmountText}>{formatCurrency(e.amount)}</Text>
-                    </View>
-                  ))
-                )}
-              </>
-            )}
-          </>
-        )}
-
-        {/* ── SECTION 4: DORM INFO & RULES ── */}
-        {activeSection === 'info' && (
-          <>
-            {settingsLoading ? (
-              <CardSkeleton />
-            ) : (
-              <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                  <View style={styles.infoLogo}>
-                    <Ionicons name="home" size={24} color="#34d399" />
-                  </View>
-                  <View>
-                    <Text style={styles.infoDormName}>{settings?.dormName || '11/38 Home'}</Text>
-                    <Text style={styles.infoSubtitle}>Resident Information & Contacts</Text>
-                  </View>
-                </View>
-
-                <View style={styles.divider} />
-
-                {/* Contact Items */}
-                <View style={styles.contactItem}>
-                  <Ionicons name="location-outline" size={18} color="#34d399" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.contactLabel}>Address</Text>
-                    <Text style={styles.contactValue}>{settings?.address || '11/38 Dhaka, Bangladesh'}</Text>
-                  </View>
-                </View>
-
-                {settings?.managerContact && (
-                  <View style={styles.contactItem}>
-                    <Ionicons name="call-outline" size={18} color="#10b981" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.contactLabel}>Manager Helpline</Text>
-                      <Text style={styles.contactValue}>{settings.managerContact}</Text>
-                    </View>
-                  </View>
-                )}
-
-                {settings?.maintenanceContact && (
-                  <View style={styles.contactItem}>
-                    <Ionicons name="construct-outline" size={18} color="#f59e0b" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.contactLabel}>Maintenance / Emergency</Text>
-                      <Text style={styles.contactValue}>{settings.maintenanceContact}</Text>
-                    </View>
-                  </View>
-                )}
-
-                <View style={styles.divider} />
-
-                {/* Default Rates & Policies */}
-                <Text style={styles.policyHeading}>Dorm Policies & Utility Information</Text>
-                <View style={styles.policyRow}>
-                  <Text style={styles.policyKey}>Currency:</Text>
-                  <Text style={styles.policyVal}>{settings?.currency || 'BDT'} ({settings?.currencySymbol || '৳'})</Text>
-                </View>
-                <View style={styles.policyRow}>
-                  <Text style={styles.policyKey}>Base Meal Rate:</Text>
-                  <Text style={styles.policyVal}>৳{settings?.mealRate || 70} / meal</Text>
-                </View>
-                <View style={styles.policyRow}>
-                  <Text style={styles.policyKey}>Bill Generation Day:</Text>
-                  <Text style={styles.policyVal}>Day {settings?.billGenerationDay || 1} of each month</Text>
-                </View>
-                <View style={styles.policyRow}>
-                  <Text style={styles.policyKey}>Standard Wifi Rate:</Text>
-                  <Text style={styles.policyVal}>৳{settings?.defaultRates?.wifi || 210} / month</Text>
-                </View>
-                <View style={styles.policyRow}>
-                  <Text style={styles.policyKey}>Water & Gas:</Text>
-                  <Text style={styles.policyVal}>Shared evenly among active residents</Text>
-                </View>
-              </View>
             )}
           </>
         )}

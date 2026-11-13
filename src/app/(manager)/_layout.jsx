@@ -17,6 +17,8 @@ export default function ManagerLayout() {
       <Stack.Screen name="settings" />
       <Stack.Screen name="market" />
       <Stack.Screen name="rooms" />
+      <Stack.Screen name="expenses" />
+      <Stack.Screen name="payments" />
     </Stack>
   );
 }

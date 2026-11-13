@@ -2,17 +2,20 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../../services/api';
 import { getCurrentMonthYear } from '../../../utils/helpers';
 
-export const useExpenses = (month, year, expenseType = 'all') => {
+export const useExpenses = (month, year, expenseType = 'all', limit = 200) => {
   const current = getCurrentMonthYear();
   const m = month || current.month;
   const y = year || current.year;
 
   return useQuery({
-    queryKey: ['public', 'expenses', m, y, expenseType],
+    queryKey: ['public', 'expenses', m, y, expenseType, limit],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('month', m);
       params.append('year', y);
+      if (limit) {
+        params.append('limit', limit);
+      }
       if (expenseType && expenseType !== 'all') {
         params.append('expenseType', expenseType);
       }

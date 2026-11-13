@@ -27,14 +27,15 @@ export const useMonthlySummary = (month, year) => {
   });
 };
 
-export const useMealEntries = (date, month, year) => {
+export const useMealEntries = (date, month, year, limit = 200) => {
   return useQuery({
-    queryKey: ['public', 'meals', 'entries', date, month, year],
+    queryKey: ['public', 'meals', 'entries', date, month, year, limit],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (date) params.append('date', date);
       if (month) params.append('month', month);
       if (year) params.append('year', year);
+      if (limit) params.append('limit', limit);
       const { data } = await api.get(`/public/meals/entries?${params.toString()}`);
       return data.data || [];
     },

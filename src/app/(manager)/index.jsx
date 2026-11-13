@@ -48,7 +48,7 @@ export default function ManagerDashboardScreen() {
       title: 'Rooms',
       value: isLoading ? '...' : `${overview.occupiedRooms ?? 0}/${overview.totalRooms ?? 0}`,
       subtitle: `${overview.availableRooms ?? 0} available`,
-      gradientColors: ['#3b82f6', '#2563eb'],
+      gradientColors: ['#047857', '#059669'],
       icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
     },
     {

@@ -162,7 +162,7 @@ export default function ManagerExpensesScreen() {
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={[styles.iconWrapper, { backgroundColor: item.type === 'grocery' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)' }]}>
-                <Ionicons name={item.type === 'grocery' ? 'cart' : 'construct'} size={20} color={item.type === 'grocery' ? '#f59e0b' : '#3b82f6'} />
+                <Ionicons name={item.type === 'grocery' ? 'cart' : 'construct'} size={20} color={item.type === 'grocery' ? '#f59e0b' : '#34d399'} />
               </View>
               <View style={styles.cardMain}>
                 <Text style={styles.desc} numberOfLines={1}>{item.description}</Text>

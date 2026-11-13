@@ -1,6 +1,6 @@
 /**
  * Bottom Tab Navigator for Dorm Solution.
- * Theme: Premium Dark Green & Emerald (#0f172a bg, #1e293b surface, #34d399 active)
+ * Theme: Transparent Glass Nav with Vibrant Emerald/Mint Icons (#34d399 active, #94a3b8 inactive)
  */
 import React from 'react';
 import { Tabs } from 'expo-router';
@@ -8,10 +8,18 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../constants/colors';
 
-function TabBarIcon({ name, focused, color }) {
+function TabBarIcon({ name, focused, size = 22 }) {
+  const iconColor = focused ? '#34d399' : '#94a3b8';
+  const iconName = focused ? name : `${name}-outline`;
+
   return (
     <View style={[styles.iconWrapper, focused && styles.iconFocused]}>
-      <Ionicons name={focused ? name : `${name}-outline`} size={22} color={color} />
+      <Ionicons
+        name={iconName}
+        size={size}
+        color={iconColor}
+        style={{ color: iconColor }}
+      />
     </View>
   );
 }
@@ -23,57 +31,63 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: '#34d399', // Mint Green active tint
-        tabBarInactiveTintColor: '#64748b',
+        tabBarInactiveTintColor: '#94a3b8', // Silver slate inactive tint
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
+      {/* 1. Home Dashboard */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="home" focused={focused} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon name="home" focused={focused} size={23} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="notices"
-        options={{
-          title: 'Notices',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="megaphone" focused={focused} color={color} />
-          ),
-        }}
-      />
+
+      {/* 2. Detailed Meal Management */}
       <Tabs.Screen
         name="meals"
         options={{
           title: 'Meals',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="restaurant" focused={focused} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon name="restaurant" focused={focused} size={23} />
           ),
+        }}
+      />
+
+      {/* 3. Expense & Financial Tracking */}
+      <Tabs.Screen
+        name="expenses"
+        options={{
+          title: 'Expense',
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon name="wallet" focused={focused} size={23} />
+          ),
+        }}
+      />
+
+      {/* Auxiliary screens accessible via Quick Services, hidden from bottom navigation */}
+      <Tabs.Screen
+        name="notices"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
         name="market"
         options={{
-          title: 'Bazar',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="cart" focused={focused} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Dorm Hub',
-          tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon name="business" focused={focused} color={color} />
-          ),
+          href: null,
         }}
       />
-      {/* Hidden auxiliary tab */}
       <Tabs.Screen
         name="profile"
         options={{
@@ -86,27 +100,33 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: Colors.dark.surface, // #1e293b
-    borderTopColor: Colors.dark.border,
-    borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 66,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+    elevation: 0,
+    height: Platform.OS === 'ios' ? 88 : 68,
     paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-    paddingTop: 8,
-    elevation: 8,
+    paddingTop: 6,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     marginTop: 2,
+    letterSpacing: 0.2,
   },
   iconWrapper: {
+    width: 48,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: 15,
   },
   iconFocused: {
-    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.4)',
   },
 });

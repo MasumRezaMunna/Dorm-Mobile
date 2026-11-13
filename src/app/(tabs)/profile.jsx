@@ -41,8 +41,8 @@ export default function ProfileTab() {
           {/* Quick Shortcuts */}
           <Text style={styles.sectionTitle}>Facilities & Features</Text>
           <TouchableOpacity onPress={() => router.push('/room')} style={styles.navRow}>
-            <View style={[styles.navIcon, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
-              <Ionicons name="bed-outline" size={20} color="#3b82f6" />
+            <View style={[styles.navIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+              <Ionicons name="bed-outline" size={20} color="#10b981" />
             </View>
             <Text style={styles.navLabel}>Rooms & Occupancy</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
@@ -57,16 +57,16 @@ export default function ProfileTab() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push('/(tabs)/market')} style={styles.navRow}>
-            <View style={[styles.navIcon, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
-              <Ionicons name="cart-outline" size={20} color="#f59e0b" />
+            <View style={[styles.navIcon, { backgroundColor: 'rgba(52,211,153,0.15)' }]}>
+              <Ionicons name="cart-outline" size={20} color="#34d399" />
             </View>
             <Text style={styles.navLabel}>Bazar Duty Schedule</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push('/(manager)/expenses')} style={styles.navRow}>
-            <View style={[styles.navIcon, { backgroundColor: 'rgba(236,72,153,0.15)' }]}>
-              <Ionicons name="wallet-outline" size={20} color="#ec4899" />
+          <TouchableOpacity onPress={() => router.push('/(tabs)/expenses')} style={styles.navRow}>
+            <View style={[styles.navIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+              <Ionicons name="wallet-outline" size={20} color="#10b981" />
             </View>
             <Text style={styles.navLabel}>Dorm Expenses</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />

@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -19,18 +18,21 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
 import { formatCurrency, formatDate, getMonthName } from '../../utils/helpers';
 
-function QuickAction({ icon, label, onPress, color = '#10b981', badge = null }) {
+function QuickServiceCard({ icon, label, sublabel, onPress, color = '#10b981', badge = null }) {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.78} style={styles.quickBtn}>
-      <View style={[styles.quickIcon, { backgroundColor: `${color}18` }]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={styles.serviceCard}>
+      <View style={[styles.serviceIconWrapper, { backgroundColor: `${color}18` }]}>
         <Ionicons name={icon} size={22} color={color} />
         {badge ? (
-          <View style={styles.actionBadge}>
-            <Text style={styles.actionBadgeText}>{badge}</Text>
+          <View style={styles.serviceBadge}>
+            <Text style={styles.serviceBadgeText}>{badge}</Text>
           </View>
         ) : null}
       </View>
-      <Text style={styles.quickLabel} numberOfLines={1}>{label}</Text>
+      <View style={styles.serviceTextCol}>
+        <Text style={styles.serviceLabel} numberOfLines={1}>{label}</Text>
+        {sublabel ? <Text style={styles.serviceSublabel} numberOfLines={1}>{sublabel}</Text> : null}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -48,20 +50,6 @@ export default function HomeScreen() {
 
   // Primary live stats
   const stats = useMemo(() => [
-    {
-      title: 'Active Residents',
-      value: isLoading ? '...' : (data?.activeMembers ?? 0),
-      subtitle: `${data?.totalMembers ?? 0} total registered`,
-      gradientColors: ['#059669', '#10b981'],
-      icon: ({ size, color }) => <Ionicons name="people" size={size} color={color} />,
-    },
-    {
-      title: 'Rooms Capacity',
-      value: isLoading ? '...' : `${data?.occupiedRooms ?? 0}/${data?.totalRooms ?? 0}`,
-      subtitle: `${data?.availableRooms ?? 0} seats open`,
-      gradientColors: ['#047857', '#059669'],
-      icon: ({ size, color }) => <Ionicons name="bed" size={size} color={color} />,
-    },
     {
       title: 'Monthly Meals',
       value: isLoading ? '...' : (data?.totalMeals ?? 0),
@@ -114,59 +102,61 @@ export default function HomeScreen() {
         }
       >
         <View style={styles.content}>
-          {/* Top Brand & Status Bar */}
+          {/* Header */}
           <View style={styles.header}>
-            <DormLogo
-              size={42}
-              subtitle={data?.dormName ? `${data.dormName} • Live System` : 'Dormitory Management'}
-            />
+            <View style={styles.headerLeftRow}>
+              <DormLogo size={42} showLabel={false} />
+              <View>
+                <Text style={styles.headerTitle}>Home</Text>
+                <Text style={styles.headerSubtitle}>{currentMonthName} {currentYear}</Text>
+              </View>
+            </View>
             <View style={styles.liveIndicator}>
               <View style={styles.liveDot} />
               <Text style={styles.liveText}>SYNCED</Text>
             </View>
           </View>
 
-          {/* Quick Access Action Hub */}
+          {/* Quick Services — Dedicated Resident Hub */}
           <View style={styles.quickActionsContainer}>
-            <Text style={styles.sectionHeading}>Quick Services</Text>
+            <View style={styles.quickHeaderRow}>
+              <View>
+                <Text style={styles.sectionHeading}>Quick Services</Text>
+                <Text style={styles.sectionSubtext}>Access all dorm utilities & records</Text>
+              </View>
+            </View>
             <View style={styles.quickGrid}>
-              <QuickAction
+              <QuickServiceCard
                 icon="megaphone-outline"
                 label="Notices"
+                sublabel="Circulars & news"
                 color="#34d399"
                 badge={notices.length > 0 ? `${notices.length}` : null}
                 onPress={() => router.push('/(tabs)/notices')}
               />
-              <QuickAction
-                icon="restaurant-outline"
-                label="Meal Plan"
-                color="#10b981"
-                onPress={() => router.push('/(tabs)/meals')}
-              />
-              <QuickAction
+              <QuickServiceCard
                 icon="cart-outline"
                 label="Bazar Duty"
-                color="#f59e0b"
+                sublabel="Shopping teams"
+                color="#10b981"
+                badge={todayTeam ? 'Active' : null}
                 onPress={() => router.push('/(tabs)/market')}
               />
-              <QuickAction
+              <QuickServiceCard
                 icon="bed-outline"
                 label="Room Hub"
+                sublabel="Seats & capacity"
                 color="#059669"
-                onPress={() => router.push('/(tabs)/community')}
+                onPress={() => router.push('/room')}
               />
-              <QuickAction
+              <QuickServiceCard
                 icon="people-outline"
                 label="Residents"
+                sublabel="Member roster"
                 color="#34d399"
                 onPress={() => router.push('/(tabs)/community')}
               />
-              <QuickAction
-                icon="call-outline"
-                label="Helpline"
-                color="#10b981"
-                onPress={() => router.push('/settings')}
-              />
+
             </View>
           </View>
 
@@ -214,14 +204,14 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* Dorm Overview Statistics Grid */}
+          {/* Financial Overview Statistics Grid */}
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Financial & Dorm Overview</Text>
+            <Text style={styles.sectionHeading}>Financial Overview</Text>
             <Text style={styles.sectionSubtext}>{currentMonthName} {currentYear}</Text>
           </View>
           {isLoading ? (
             <View style={styles.statsGrid}>
-              {[1, 2, 3, 4, 5, 6].map((i) => <CardSkeleton key={i} />)}
+              {[1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
             </View>
           ) : (
             <View style={styles.statsGrid}>
@@ -272,7 +262,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
   header: {
     flexDirection: 'row',
@@ -280,6 +270,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
     paddingVertical: 6,
+  },
+  headerLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: Colors.dark.text,
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
+    marginTop: 2,
+    fontWeight: '500',
   },
   liveIndicator: {
     flexDirection: 'row',
@@ -305,7 +312,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   quickActionsContainer: {
-    marginBottom: 14,
+    marginBottom: 16,
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.18)',
+    padding: 16,
+  },
+  quickHeaderRow: {
+    marginBottom: 12,
   },
   sectionHeading: {
     fontSize: 16,
@@ -316,6 +331,7 @@ const styles = StyleSheet.create({
   sectionSubtext: {
     fontSize: 12,
     color: Colors.dark.textDim,
+    marginTop: 2,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -332,50 +348,57 @@ const styles = StyleSheet.create({
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 10,
+    gap: 8,
   },
-  quickBtn: {
+  serviceCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '31%',
-    backgroundColor: Colors.dark.card, // #1e293b
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    paddingVertical: 14,
-    paddingHorizontal: 6,
-  },
-  quickIcon: {
-    width: 44,
-    height: 44,
+    width: '48.5%',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+  serviceIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
     position: 'relative',
   },
-  actionBadge: {
+  serviceBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
     backgroundColor: '#059669',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  actionBadgeText: {
+  serviceBadgeText: {
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
-  quickLabel: {
+  serviceTextCol: {
+    flex: 1,
+  },
+  serviceLabel: {
     fontSize: 12,
+    fontWeight: '700',
     color: Colors.dark.text,
-    fontWeight: '600',
-    textAlign: 'center',
+  },
+  serviceSublabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    marginTop: 1,
   },
   highlightCardMarket: {
     backgroundColor: 'rgba(245, 158, 11, 0.07)',

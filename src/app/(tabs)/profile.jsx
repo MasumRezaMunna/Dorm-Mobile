@@ -80,6 +80,14 @@ export default function ProfileTab() {
             <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
           </TouchableOpacity>
 
+          <TouchableOpacity onPress={() => router.push('/settings')} style={styles.navRow}>
+            <View style={[styles.navIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+              <Ionicons name="server-outline" size={20} color="#10b981" />
+            </View>
+            <Text style={styles.navLabel}>Cache Memory & Storage</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.dark.textDim} />
+          </TouchableOpacity>
+
           {/* Contact Box */}
           <View style={styles.contactBox}>
             <Text style={styles.contactTitle}>Emergency & Helpline</Text>

@@ -12,11 +12,14 @@ import Avatar from '../../components/ui/Avatar';
 import Badge from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import Colors from '../../constants/colors';
+import { formatCurrency } from '../../utils/helpers';
 
 function MemberItem({ item }) {
   const name = item.name || item.userId?.displayName || 'Resident';
   const photo = item.photoURL || item.userId?.photoURL;
   const room = item.room?.roomNumber || item.roomId?.roomNumber;
+  const paid = item.totalPaid ?? item.paidAmount;
+  const afterMeal = item.afterMeal;
 
   return (
     <View style={styles.item}>
@@ -29,11 +32,19 @@ function MemberItem({ item }) {
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
         <Text style={styles.id}>ID: {item.memberId}</Text>
         {room && <Text style={styles.roomNum}>Room {room}</Text>}
+        {paid !== undefined && (
+          <Text style={styles.paymentText}>Paid: {formatCurrency(paid)}</Text>
+        )}
       </View>
       <View style={styles.right}>
         <Badge label={item.status || 'active'} colorKey={item.status || 'active'} />
         {item.totalMeals !== undefined && (
           <Text style={styles.mealsText}>{item.totalMeals} meals</Text>
+        )}
+        {afterMeal !== undefined && (
+          <Text style={[styles.deductionText, afterMeal >= 0 ? styles.posText : styles.negText]}>
+            {afterMeal >= 0 ? `+${formatCurrency(afterMeal)}` : `-${formatCurrency(Math.abs(afterMeal))}`}
+          </Text>
         )}
       </View>
     </View>
@@ -136,6 +147,10 @@ const styles = StyleSheet.create({
   name: { fontSize: 14, fontWeight: '700', color: Colors.dark.text },
   id:   { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
   roomNum: { fontSize: 12, color: '#34d399', marginTop: 2, fontWeight: '500' },
+  paymentText: { fontSize: 11, color: '#34d399', marginTop: 2, fontWeight: '600' },
+  deductionText: { fontSize: 10, fontWeight: '700', marginTop: 2 },
+  posText: { color: '#34d399' },
+  negText: { color: '#f43f5e' },
   right: { alignItems: 'flex-end', gap: 4 },
   mealsText: { fontSize: 11, color: Colors.dark.textDim, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 48, gap: 12 },

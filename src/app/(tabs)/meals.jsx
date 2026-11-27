@@ -3,7 +3,7 @@
  * Strictly TWO meals: Lunch & Dinner only.
  * Theme: Premium Dark Green (#0f172a bg, #1e293b surface, #059669 / #10b981 / #34d399)
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,12 +17,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useLocalSearchParams } from 'expo-router';
 
 import {
   useWeeklyPlan,
   useMonthlySummary,
   useMealEntries,
 } from '../../features/meals/hooks/useMeals';
+import { useCommunityStats } from '../../features/dashboard/hooks/useDashboard';
 import Avatar from '../../components/ui/Avatar';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
@@ -43,12 +45,20 @@ const MEAL_TABS = [
 ];
 
 export default function MealsTabScreen() {
+  const params = useLocalSearchParams();
   const current = getCurrentMonthYear();
   const [selectedMonth, setSelectedMonth] = useState(current.month);
   const [selectedYear, setSelectedYear] = useState(current.year);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(params?.tab || 'overview');
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
   const [expandedDates, setExpandedDates] = useState({});
   const [searchDate, setSearchDate] = useState('');
+
+  useEffect(() => {
+    if (params?.tab) {
+      setActiveTab(params.tab);
+    }
+  }, [params?.tab]);
 
   // Previous month calculation
   const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
@@ -104,6 +114,11 @@ export default function MealsTabScreen() {
     isRefetching: isRefetchingEntries,
   } = useMealEntries(null, selectedMonth, selectedYear, 200);
 
+  const {
+    data: communityMembers = [],
+    refetch: refetchCommunity,
+  } = useCommunityStats(selectedMonth, selectedYear);
+
   const isRefetching = isRefetchingWeekly || isRefetchingSummary || isRefetchingEntries;
 
   const handleRefresh = () => {
@@ -111,6 +126,7 @@ export default function MealsTabScreen() {
     refetchSummary();
     refetchPrevSummary();
     refetchEntries();
+    refetchCommunity();
   };
 
   // Toggle expandable daily cards
@@ -121,24 +137,90 @@ export default function MealsTabScreen() {
     }));
   };
 
+  // Direct community payment lookup map
+  const communityPayMap = useMemo(() => {
+    const map = {};
+    if (Array.isArray(communityMembers)) {
+      communityMembers.forEach((c) => {
+        const val = c.totalPaid ?? c.paidAmount ?? 0;
+        if (c.memberId) map[c.memberId] = val;
+        if (c.name) map[c.name.trim().toLowerCase()] = val;
+      });
+    }
+    return map;
+  }, [communityMembers]);
+
   // ─── Financial & Metric Calculations (Lunch & Dinner ONLY) ───
   const mealRate = summary?.mealRate || 0;
   const groceryTotal = summary?.groceryTotal || 0;
   const members = summary?.members || [];
 
+  const membersWithPayments = useMemo(() => {
+    return members.map((m) => {
+      const memId = m.memberId;
+      const memNameKey = (m.name || '').trim().toLowerCase();
+      const paidAmount =
+        m.paidAmount !== undefined && m.paidAmount > 0
+          ? m.paidAmount
+          : (communityPayMap[memId] ?? communityPayMap[memNameKey] ?? 0);
+
+      const mealCost =
+        m.mealCost !== undefined
+          ? m.mealCost
+          : Math.round((m.totalMeals || 0) * mealRate * 100) / 100;
+      const commonCost =
+        m.commonCost !== undefined
+          ? m.commonCost
+          : (summary?.commonCostPerMember || 0);
+      const totalCost =
+        m.totalCost !== undefined && m.totalCost > 0
+          ? m.totalCost
+          : Math.round((mealCost + commonCost) * 100) / 100;
+      const afterMeal =
+        m.afterMeal !== undefined
+          ? m.afterMeal
+          : Math.round((paidAmount - totalCost) * 100) / 100;
+
+      return {
+        ...m,
+        paidAmount,
+        mealCost,
+        commonCost,
+        totalCost,
+        afterMeal,
+      };
+    });
+  }, [members, communityPayMap, mealRate, summary?.commonCostPerMember]);
+
   // Monthly totals from member aggregated stats
   const monthlyLunch = useMemo(() => {
-    return members.reduce((sum, m) => sum + (m.totalLunch || 0), 0);
-  }, [members]);
+    return membersWithPayments.reduce((sum, m) => sum + (m.totalLunch || 0), 0);
+  }, [membersWithPayments]);
 
   const monthlyDinner = useMemo(() => {
-    return members.reduce((sum, m) => sum + (m.totalDinner || 0), 0);
-  }, [members]);
+    return membersWithPayments.reduce((sum, m) => sum + (m.totalDinner || 0), 0);
+  }, [membersWithPayments]);
 
   const monthlyTotalMeals = summary?.totalMeals || (monthlyLunch + monthlyDinner);
   const monthlyLunchExpense = monthlyLunch * mealRate;
   const monthlyDinnerExpense = monthlyDinner * mealRate;
   const totalMealExpense = groceryTotal || (monthlyTotalMeals * mealRate);
+
+  const totalPaidAmount = useMemo(() => {
+    if (summary?.totalPaid !== undefined && summary?.totalPaid > 0) return summary.totalPaid;
+    return Math.round(
+      membersWithPayments.reduce((sum, m) => sum + (m.paidAmount || 0), 0) * 100
+    ) / 100;
+  }, [summary, membersWithPayments]);
+
+  const totalAllCosting = useMemo(() => {
+    const costSum = membersWithPayments.reduce((sum, m) => sum + (m.totalCost || 0), 0);
+    return Math.round(costSum * 100) / 100 || totalMealExpense;
+  }, [membersWithPayments, totalMealExpense]);
+
+  const totalAfterDeduction = useMemo(() => {
+    return Math.round((totalPaidAmount - totalAllCosting) * 100) / 100;
+  }, [totalPaidAmount, totalAllCosting]);
 
   // Today's stats calculation
   const todayStats = useMemo(() => {
@@ -714,6 +796,31 @@ export default function MealsTabScreen() {
                   </Text>
                   <Text style={styles.statBoxSub}>Daily average: {avgDailyMeals} meals/day</Text>
                 </View>
+
+                <View style={styles.statBox}>
+                  <Text style={styles.statBoxLabel}>Members Total Payment</Text>
+                  <Text style={[styles.statBoxVal, { color: '#34d399', fontSize: 20 }]}>
+                    {formatCurrency(totalPaidAmount)}
+                  </Text>
+                  <Text style={styles.statBoxSub}>Total collected from members</Text>
+                </View>
+
+                <View style={styles.statBox}>
+                  <Text style={styles.statBoxLabel}>After All Costing Deduction</Text>
+                  <Text
+                    style={[
+                      styles.statBoxVal,
+                      { color: totalAfterDeduction >= 0 ? '#34d399' : '#f43f5e', fontSize: 20 },
+                    ]}
+                  >
+                    {totalAfterDeduction >= 0
+                      ? `+${formatCurrency(totalAfterDeduction)}`
+                      : `-${formatCurrency(Math.abs(totalAfterDeduction))}`}
+                  </Text>
+                  <Text style={styles.statBoxSub}>
+                    {totalAfterDeduction >= 0 ? 'Surplus Balance (Advance)' : 'Deficit Balance (Due)'}
+                  </Text>
+                </View>
               </View>
             </Animated.View>
 
@@ -761,10 +868,28 @@ export default function MealsTabScreen() {
               </View>
             </View>
 
-            {/* Resident Breakdown Table */}
+            {/* Resident Breakdown Header & View Toggle */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Resident Breakdown ({members.length})</Text>
-              <Text style={styles.sectionSub}>Lunch, Dinner & Individual Cost</Text>
+              <View>
+                <Text style={styles.sectionTitle}>Resident Breakdown ({membersWithPayments.length})</Text>
+                <Text style={styles.sectionSub}>Individual Payments & Total Cost Deduction</Text>
+              </View>
+              <View style={styles.viewToggleGroup}>
+                <TouchableOpacity
+                  onPress={() => setViewMode('cards')}
+                  style={[styles.viewToggleBtn, viewMode === 'cards' && styles.viewToggleBtnActive]}
+                >
+                  <Ionicons name="grid-outline" size={14} color={viewMode === 'cards' ? '#ffffff' : Colors.dark.textDim} />
+                  <Text style={[styles.viewToggleText, viewMode === 'cards' && styles.viewToggleTextActive]}>Cards</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setViewMode('table')}
+                  style={[styles.viewToggleBtn, viewMode === 'table' && styles.viewToggleBtnActive]}
+                >
+                  <Ionicons name="list-outline" size={14} color={viewMode === 'table' ? '#ffffff' : Colors.dark.textDim} />
+                  <Text style={[styles.viewToggleText, viewMode === 'table' && styles.viewToggleTextActive]}>Table</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {summaryLoading ? (
@@ -773,34 +898,183 @@ export default function MealsTabScreen() {
                   <CardSkeleton key={i} />
                 ))}
               </View>
-            ) : members.length === 0 ? (
+            ) : membersWithPayments.length === 0 ? (
               <EmptyState
                 icon={({ size, color }) => <Ionicons name="people-outline" size={size} color={color} />}
                 title="No resident records"
                 subtitle="Resident summaries will calculate as meals are entered."
               />
-            ) : (
-              members.map((m, i) => (
-                <View key={m.memberId || i} style={styles.memberSummaryCard}>
-                  <Avatar uri={m.photoURL} name={m.name || 'Member'} size={40} />
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.memberName}>{m.name || 'Resident'}</Text>
-                    <Text style={styles.memberRoom}>
-                      Room {m.roomNumber || 'N/A'} • ID: {m.memberId || '—'}
-                    </Text>
-                    <View style={styles.memberCountsBadgeRow}>
-                      <Text style={styles.memberCountBadgeL}>Lunch: {m.totalLunch || 0}</Text>
-                      <Text style={styles.memberCountBadgeD}>Dinner: {m.totalDinner || 0}</Text>
-                      <Text style={styles.memberCountBadgeT}>Total: {m.totalMeals || 0}</Text>
+            ) : viewMode === 'cards' ? (
+              membersWithPayments.map((m, i) => (
+                <View key={m.memberId || i} style={styles.memberSummaryCardDetailed}>
+                  <View style={styles.memberSummaryTopRow}>
+                    <Avatar uri={m.photoURL} name={m.name || 'Member'} size={42} />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.memberName}>{m.name || 'Resident'}</Text>
+                      <Text style={styles.memberRoom}>
+                        Room {m.roomNumber || 'N/A'} • ID: {m.memberId || '—'}
+                      </Text>
+                      <View style={styles.memberCountsBadgeRow}>
+                        <Text style={styles.memberCountBadgeL}>Lunch: {m.totalLunch || 0}</Text>
+                        <Text style={styles.memberCountBadgeD}>Dinner: {m.totalDinner || 0}</Text>
+                        <Text style={styles.memberCountBadgeT}>Total Meals: {m.totalMeals || 0}</Text>
+                      </View>
                     </View>
                   </View>
 
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.memberCost}>{formatCurrency(m.mealCost || 0)}</Text>
-                    <Text style={styles.memberCostSub}>Meal Share</Text>
+                  {/* Cost breakdown chips */}
+                  <View style={styles.memberCostBreakdownRow}>
+                    <View style={styles.costBreakdownItem}>
+                      <Text style={styles.costBreakdownLabel}>Meal Cost</Text>
+                      <Text style={styles.costBreakdownVal}>{formatCurrency(m.mealCost || 0)}</Text>
+                    </View>
+                    <View style={styles.costBreakdownItem}>
+                      <Text style={styles.costBreakdownLabel}>Common Share</Text>
+                      <Text style={styles.costBreakdownVal}>{formatCurrency(m.commonCost || 0)}</Text>
+                    </View>
+                    <View style={styles.costBreakdownItem}>
+                      <Text style={styles.costBreakdownLabel}>All Costing</Text>
+                      <Text style={styles.costBreakdownValBold}>{formatCurrency(m.totalCost || 0)}</Text>
+                    </View>
+                  </View>
+
+                  {/* Members Individual Total Payment & After All Costing Deduction */}
+                  <View style={styles.memberFinanceHighlightBox}>
+                    <View style={styles.memberFinanceHighlightRow}>
+                      <View style={styles.memberPaymentCol}>
+                        <Text style={styles.memberFinanceLabel}>Individual Total Payment</Text>
+                        <Text style={styles.memberPaymentValLarge}>{formatCurrency(m.paidAmount || 0)}</Text>
+                      </View>
+
+                      <View style={styles.memberDeductionCol}>
+                        <Text style={styles.memberFinanceLabel}>After All Costing Deduction</Text>
+                        <View
+                          style={[
+                            styles.balanceBadgeBox,
+                            m.afterMeal > 0
+                              ? styles.balanceBadgePositive
+                              : m.afterMeal < 0
+                                ? styles.balanceBadgeNegative
+                                : styles.balanceBadgeNeutral,
+                          ]}
+                        >
+                          <Ionicons
+                            name={
+                              m.afterMeal > 0
+                                ? 'arrow-up-circle'
+                                : m.afterMeal < 0
+                                  ? 'arrow-down-circle'
+                                  : 'checkmark-circle'
+                            }
+                            size={16}
+                            color={
+                              m.afterMeal > 0
+                                ? '#34d399'
+                                : m.afterMeal < 0
+                                  ? '#f43f5e'
+                                  : Colors.dark.textMuted
+                            }
+                          />
+                          <Text
+                            style={[
+                              styles.balanceBadgeTextLarge,
+                              m.afterMeal > 0
+                                ? styles.balanceBadgeTextPositive
+                                : m.afterMeal < 0
+                                  ? styles.balanceBadgeTextNegative
+                                  : styles.balanceBadgeTextNeutral,
+                            ]}
+                          >
+                            {m.afterMeal > 0
+                              ? `+${formatCurrency(m.afterMeal)}`
+                              : m.afterMeal < 0
+                                ? `-${formatCurrency(Math.abs(m.afterMeal))}`
+                                : '৳0.00'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Calculation breakdown line */}
+                    <View style={styles.formulaRow}>
+                      <Text style={styles.formulaText}>
+                        Paid {formatCurrency(m.paidAmount || 0)} − Cost {formatCurrency(m.totalCost || 0)} ={' '}
+                        <Text style={{ fontWeight: '700', color: m.afterMeal >= 0 ? '#34d399' : '#f43f5e' }}>
+                          {m.afterMeal >= 0 ? `+${formatCurrency(m.afterMeal)}` : `-${formatCurrency(Math.abs(m.afterMeal))}`}
+                        </Text>
+                        {' '}({m.afterMeal >= 0 ? 'Advance' : 'Due'})
+                      </Text>
+                    </View>
                   </View>
                 </View>
               ))
+            ) : (
+              /* Table View for Monthly Summary */
+              <View style={styles.tableCard}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                  <View>
+                    <View style={styles.tableHeaderRow}>
+                      <Text style={[styles.tableTh, { width: 120 }]}>Resident</Text>
+                      <Text style={[styles.tableThCenter, { width: 55 }]}>Meals</Text>
+                      <Text style={[styles.tableThRight, { width: 80 }]}>Meal Cost</Text>
+                      <Text style={[styles.tableThRight, { width: 75 }]}>Common</Text>
+                      <Text style={[styles.tableThRight, { width: 90 }]}>All Costing</Text>
+                      <Text style={[styles.tableThRight, { width: 105, color: '#34d399' }]}>Total Payment</Text>
+                      <Text style={[styles.tableThRight, { width: 115 }]}>After Deduction</Text>
+                    </View>
+
+                    {membersWithPayments.map((m, idx) => (
+                      <View
+                        key={m.memberId || idx}
+                        style={[
+                          styles.tableRow,
+                          idx % 2 === 1 && { backgroundColor: 'rgba(255,255,255,0.02)' },
+                        ]}
+                      >
+                        <View style={[styles.tableTdName, { width: 120 }]}>
+                          <Text style={styles.tableResidentName} numberOfLines={1}>{m.name}</Text>
+                          <Text style={styles.tableResidentRoom}>Rm {m.roomNumber || '—'}</Text>
+                        </View>
+                        <Text style={[styles.tableTdCenter, { width: 55 }]}>{m.totalMeals || 0}</Text>
+                        <Text style={[styles.tableTdRight, { width: 80 }]}>{formatCurrency(m.mealCost || 0)}</Text>
+                        <Text style={[styles.tableTdRight, { width: 75 }]}>{formatCurrency(m.commonCost || 0)}</Text>
+                        <Text style={[styles.tableTdRightBold, { width: 90 }]}>{formatCurrency(m.totalCost || 0)}</Text>
+                        <Text style={[styles.tableTdPayment, { width: 105 }]}>{formatCurrency(m.paidAmount || 0)}</Text>
+                        <View style={[styles.tableTdDeduction, { width: 115 }]}>
+                          <Text
+                            style={[
+                              styles.tableDeductionBadge,
+                              m.afterMeal >= 0 ? styles.textPositive : styles.textNegative,
+                            ]}
+                          >
+                            {m.afterMeal >= 0 ? `+${formatCurrency(m.afterMeal)}` : `-${formatCurrency(Math.abs(m.afterMeal))}`}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+
+                    <View style={styles.tableFooterRow}>
+                      <Text style={[styles.tableFooterLabel, { width: 120 }]}>TOTALS</Text>
+                      <Text style={[styles.tableTdCenter, { width: 55, fontWeight: '800' }]}>{monthlyTotalMeals}</Text>
+                      <Text style={[styles.tableTdRight, { width: 80, fontWeight: '700' }]}>{formatCurrency(totalMealExpense)}</Text>
+                      <Text style={[styles.tableTdRight, { width: 75, fontWeight: '700' }]}>{formatCurrency(summary?.commonTotal || 0)}</Text>
+                      <Text style={[styles.tableTdRightBold, { width: 90, color: '#f59e0b' }]}>{formatCurrency(totalAllCosting)}</Text>
+                      <Text style={[styles.tableTdPayment, { width: 105, fontSize: 13 }]}>{formatCurrency(totalPaidAmount)}</Text>
+                      <View style={[styles.tableTdDeduction, { width: 115 }]}>
+                        <Text
+                          style={[
+                            styles.tableDeductionBadge,
+                            totalAfterDeduction >= 0 ? styles.textPositive : styles.textNegative,
+                            { fontWeight: '800' },
+                          ]}
+                        >
+                          {totalAfterDeduction >= 0 ? `+${formatCurrency(totalAfterDeduction)}` : `-${formatCurrency(Math.abs(totalAfterDeduction))}`}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </ScrollView>
+              </View>
             )}
           </>
         )}
@@ -1508,6 +1782,115 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.border,
     marginBottom: 8,
   },
+  memberSummaryCardDetailed: {
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    marginBottom: 10,
+  },
+  memberSummaryTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  memberCostBreakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  costBreakdownItem: {
+    alignItems: 'center',
+  },
+  costBreakdownLabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    fontWeight: '500',
+  },
+  costBreakdownVal: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.dark.text,
+    marginTop: 2,
+  },
+  costBreakdownValBold: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#f59e0b',
+    marginTop: 2,
+  },
+  memberFinanceHighlightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  memberPaymentCol: {
+    flex: 1,
+  },
+  memberDeductionCol: {
+    alignItems: 'flex-end',
+  },
+  memberFinanceLabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  memberPaymentVal: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#34d399',
+    marginTop: 2,
+  },
+  balanceBadgeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: 2,
+  },
+  balanceBadgePositive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  balanceBadgeNegative: {
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.3)',
+  },
+  balanceBadgeNeutral: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  balanceBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  balanceBadgeTextPositive: {
+    color: '#34d399',
+  },
+  balanceBadgeTextNegative: {
+    color: '#f43f5e',
+  },
+  balanceBadgeTextNeutral: {
+    color: Colors.dark.textMuted,
+  },
   memberName: {
     fontSize: 14,
     fontWeight: '700',
@@ -1657,5 +2040,188 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.dark.textDim,
     marginTop: 2,
+  },
+
+  // View Toggle Group (Cards vs Table)
+  viewToggleGroup: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  viewToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  viewToggleBtnActive: {
+    backgroundColor: '#059669',
+  },
+  viewToggleText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.dark.textDim,
+  },
+  viewToggleTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+
+  // Highlight Box for Individual Member Payment & Deduction
+  memberFinanceHighlightBox: {
+    marginTop: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  memberPaymentValLarge: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#10b981',
+    marginTop: 2,
+  },
+  balanceBadgeTextLarge: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  formulaRow: {
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  formulaText: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    lineHeight: 14,
+  },
+
+  // Table View for Monthly Summary
+  tableCard: {
+    backgroundColor: Colors.dark.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginBottom: 16,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderRadius: 8,
+  },
+  tableTh: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.dark.textDim,
+    textTransform: 'uppercase',
+  },
+  tableThCenter: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.dark.textDim,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  tableThRight: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.dark.textDim,
+    textAlign: 'right',
+    paddingRight: 6,
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  tableTdName: {
+    justifyContent: 'center',
+  },
+  tableResidentName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
+  tableResidentRoom: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+  },
+  tableTdCenter: {
+    fontSize: 12,
+    color: Colors.dark.text,
+    textAlign: 'center',
+  },
+  tableTdRight: {
+    fontSize: 12,
+    color: Colors.dark.text,
+    textAlign: 'right',
+    paddingRight: 6,
+  },
+  tableTdRightBold: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.dark.text,
+    textAlign: 'right',
+    paddingRight: 6,
+  },
+  tableTdPayment: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#10b981',
+    textAlign: 'right',
+    paddingRight: 6,
+  },
+  tableTdDeduction: {
+    alignItems: 'flex-end',
+    paddingRight: 6,
+  },
+  tableDeductionBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  textPositive: {
+    color: '#34d399',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+  },
+  textNegative: {
+    color: '#f43f5e',
+    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+  },
+  tableFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderTopWidth: 1.5,
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    marginTop: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    borderRadius: 8,
+  },
+  tableFooterLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#34d399',
   },
 });

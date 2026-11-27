@@ -21,8 +21,63 @@ export const useMonthlySummary = (month, year) => {
   return useQuery({
     queryKey: ['public', 'meals', 'monthly-detail', m, y],
     queryFn: async () => {
-      const { data } = await api.get(`/public/meals/monthly-detail?month=${m}&year=${y}`);
-      return data.data;
+      const [detailRes, commRes] = await Promise.allSettled([
+        api.get(`/public/meals/monthly-detail?month=${m}&year=${y}`),
+        api.get(`/public/community?month=${m}&year=${y}`),
+      ]);
+
+      const detailData = detailRes.status === 'fulfilled' ? detailRes.value.data?.data : null;
+      const commData = commRes.status === 'fulfilled' ? commRes.value.data?.data : [];
+
+      if (!detailData) {
+        return null;
+      }
+
+      // Build community payment lookup map by memberId and lowercased name
+      const payMap = {};
+      if (Array.isArray(commData)) {
+        commData.forEach((c) => {
+          if (c.memberId) payMap[c.memberId] = c.totalPaid ?? c.paidAmount ?? 0;
+          if (c.name) payMap[c.name.trim().toLowerCase()] = c.totalPaid ?? c.paidAmount ?? 0;
+        });
+      }
+
+      const enrichedMembers = (detailData.members || []).map((mem) => {
+        const memId = mem.memberId;
+        const memNameKey = (mem.name || '').trim().toLowerCase();
+        const paidAmount =
+          mem.paidAmount !== undefined
+            ? mem.paidAmount
+            : (payMap[memId] ?? payMap[memNameKey] ?? 0);
+
+        const totalCost = mem.totalCost || ((mem.mealCost || 0) + (mem.commonCost || 0));
+        const afterMeal =
+          mem.afterMeal !== undefined
+            ? mem.afterMeal
+            : Math.round((paidAmount - totalCost) * 100) / 100;
+
+        return {
+          ...mem,
+          paidAmount,
+          afterMeal,
+          totalCost,
+        };
+      });
+
+      const totalPaid = Math.round(
+        enrichedMembers.reduce((sum, member) => sum + (member.paidAmount || 0), 0) * 100
+      ) / 100;
+      const totalExpense =
+        detailData.totalExpense ||
+        ((detailData.groceryTotal || 0) + (detailData.commonTotal || 0));
+      const netBalance = Math.round((totalPaid - totalExpense) * 100) / 100;
+
+      return {
+        ...detailData,
+        members: enrichedMembers,
+        totalPaid,
+        netBalance,
+      };
     },
   });
 };

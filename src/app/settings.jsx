@@ -3,18 +3,72 @@
  * Displays public dorm rules, address, manager contact, maintenance contact,
  * wifi details, and facilities.
  */
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useDormSettings } from '../features/dashboard/hooks/useDashboard';
+import { getCacheMetrics, clearAllCache } from '../services/cacheManager';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import Colors from '../constants/colors';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: settings, isLoading, refetch, isRefetching } = useDormSettings();
+  const [cacheMetrics, setCacheMetrics] = useState({ keyCount: 0, formattedSize: 'Calculating...' });
+  const [isClearing, setIsClearing] = useState(false);
+
+  const loadMetrics = useCallback(async () => {
+    const metrics = await getCacheMetrics();
+    setCacheMetrics(metrics);
+  }, []);
+
+  useEffect(() => {
+    loadMetrics();
+  }, [loadMetrics]);
+
+  const handleRefresh = async () => {
+    await Promise.all([refetch(), loadMetrics()]);
+  };
+
+  const handleClearCache = () => {
+    Alert.alert(
+      'Clear Cache Memory',
+      'This will clear stored offline data and query cache from memory. Fresh data will reload from the server. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Cache',
+          style: 'destructive',
+          onPress: async () => {
+            setIsClearing(true);
+            try {
+              await clearAllCache(queryClient);
+              await loadMetrics();
+              Toast.show({
+                type: 'success',
+                text1: 'Cache Memory Cleared',
+                text2: 'Local cache memory freed successfully.',
+              });
+            } catch (err) {
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to clear cache memory.',
+              });
+            } finally {
+              setIsClearing(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -31,75 +85,127 @@ export default function SettingsScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#34d399" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#34d399" />}
         contentContainerStyle={styles.scroll}
       >
         {isLoading ? (
           <CardSkeleton />
         ) : (
-          <View style={styles.card}>
-            <View style={styles.brandingHeader}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="home" size={28} color="#34d399" />
+          <>
+            <View style={styles.card}>
+              <View style={styles.brandingHeader}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="home" size={28} color="#34d399" />
+                </View>
+                <Text style={styles.dormName}>{settings?.dormName || '11/38 Home'}</Text>
+                <Text style={styles.dormTagline}>Dormitory Management System</Text>
               </View>
-              <Text style={styles.dormName}>{settings?.dormName || '11/38 Home'}</Text>
-              <Text style={styles.dormTagline}>Dormitory Management System</Text>
-            </View>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            {/* Address */}
-            <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={20} color="#34d399" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.infoLabel}>Location & Address</Text>
-                <Text style={styles.infoValue}>{settings?.address || '11/38 Dhaka, Bangladesh'}</Text>
-              </View>
-            </View>
-
-            {/* Manager Contact */}
-            {settings?.managerContact && (
+              {/* Address */}
               <View style={styles.infoRow}>
-                <Ionicons name="call-outline" size={20} color="#10b981" />
+                <Ionicons name="location-outline" size={20} color="#34d399" />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.infoLabel}>Manager Contact</Text>
-                  <Text style={styles.infoValue}>{settings.managerContact}</Text>
+                  <Text style={styles.infoLabel}>Location & Address</Text>
+                  <Text style={styles.infoValue}>{settings?.address || '11/38 Dhaka, Bangladesh'}</Text>
                 </View>
               </View>
-            )}
 
-            {/* Maintenance */}
-            {settings?.maintenanceContact && (
-              <View style={styles.infoRow}>
-                <Ionicons name="construct-outline" size={20} color="#f59e0b" />
+              {/* Manager Contact */}
+              {settings?.managerContact && (
+                <View style={styles.infoRow}>
+                  <Ionicons name="call-outline" size={20} color="#10b981" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.infoLabel}>Manager Contact</Text>
+                    <Text style={styles.infoValue}>{settings.managerContact}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Maintenance */}
+              {settings?.maintenanceContact && (
+                <View style={styles.infoRow}>
+                  <Ionicons name="construct-outline" size={20} color="#f59e0b" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.infoLabel}>Maintenance Helpline</Text>
+                    <Text style={styles.infoValue}>{settings.maintenanceContact}</Text>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.divider} />
+
+              {/* Dorm Guidelines */}
+              <Text style={styles.guidelineTitle}>Dorm Guidelines & Policies</Text>
+              <View style={styles.ruleItem}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
+                <Text style={styles.ruleText}>Daily lunch and dinner entries must be updated before cutoff time.</Text>
+              </View>
+              <View style={styles.ruleItem}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
+                <Text style={styles.ruleText}>Market / Bazar duty rotation is assigned collaboratively.</Text>
+              </View>
+              <View style={styles.ruleItem}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
+                <Text style={styles.ruleText}>Common expenses (electricity, gas, internet) are shared equally.</Text>
+              </View>
+              <View style={styles.ruleItem}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
+                <Text style={styles.ruleText}>Quiet hours are observed from 11:00 PM to 7:00 AM.</Text>
+              </View>
+            </View>
+
+            {/* Cache Memory Management Card */}
+            <View style={[styles.card, { marginTop: 16 }]}>
+              <View style={styles.cacheHeaderRow}>
+                <View style={styles.cacheIconWrapper}>
+                  <Ionicons name="server-outline" size={22} color="#10b981" />
+                </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.infoLabel}>Maintenance Helpline</Text>
-                  <Text style={styles.infoValue}>{settings.maintenanceContact}</Text>
+                  <Text style={styles.cacheTitle}>Cache Memory & Storage</Text>
+                  <Text style={styles.cacheSubtitle}>Offline persistence & fast query caching</Text>
                 </View>
               </View>
-            )}
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            {/* Dorm Guidelines */}
-            <Text style={styles.guidelineTitle}>Dorm Guidelines & Policies</Text>
-            <View style={styles.ruleItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
-              <Text style={styles.ruleText}>Daily lunch and dinner entries must be updated before cutoff time.</Text>
+              <View style={styles.cacheStatsRow}>
+                <View style={styles.cacheStatBox}>
+                  <Text style={styles.cacheStatLabel}>Cache Memory</Text>
+                  <Text style={styles.cacheStatVal}>{cacheMetrics.formattedSize}</Text>
+                </View>
+                <View style={styles.cacheStatBox}>
+                  <Text style={styles.cacheStatLabel}>Cached Keys</Text>
+                  <Text style={styles.cacheStatVal}>{cacheMetrics.keyCount} entries</Text>
+                </View>
+                <View style={styles.cacheStatBox}>
+                  <Text style={styles.cacheStatLabel}>Status</Text>
+                  <Text style={[styles.cacheStatVal, { color: '#34d399' }]}>Active</Text>
+                </View>
+              </View>
+
+              <Text style={styles.cacheHelpText}>
+                Cache memory retains resident directory, meal records, and expenses locally so the app opens instantly even on slow connections.
+              </Text>
+
+              <TouchableOpacity
+                onPress={handleClearCache}
+                disabled={isClearing}
+                style={styles.clearCacheBtn}
+                activeOpacity={0.8}
+              >
+                {isClearing ? (
+                  <ActivityIndicator size="small" color="#f43f5e" />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={18} color="#f43f5e" />
+                    <Text style={styles.clearCacheBtnText}>Clear Cache Memory</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
-            <View style={styles.ruleItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
-              <Text style={styles.ruleText}>Market / Bazar duty rotation is assigned collaboratively.</Text>
-            </View>
-            <View style={styles.ruleItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
-              <Text style={styles.ruleText}>Common expenses (electricity, gas, internet) are shared equally.</Text>
-            </View>
-            <View style={styles.ruleItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
-              <Text style={styles.ruleText}>Quiet hours are observed from 11:00 PM to 7:00 AM.</Text>
-            </View>
-          </View>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -155,5 +261,76 @@ const styles = StyleSheet.create({
   guidelineTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark.text, marginBottom: 12 },
   ruleItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
   ruleText: { fontSize: 13, color: Colors.dark.textMuted, flex: 1, lineHeight: 18 },
+  cacheHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  cacheIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cacheTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.dark.text,
+  },
+  cacheSubtitle: {
+    fontSize: 12,
+    color: Colors.dark.textMuted,
+    marginTop: 2,
+  },
+  cacheStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  cacheStatBox: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+  },
+  cacheStatLabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  cacheStatVal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.dark.text,
+    marginTop: 4,
+  },
+  cacheHelpText: {
+    fontSize: 12,
+    color: Colors.dark.textDim,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  clearCacheBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.25)',
+  },
+  clearCacheBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f43f5e',
+  },
 });
 

@@ -78,6 +78,30 @@ export default function HomeScreen() {
       gradientColors: ['#047857', '#10b981'],
       icon: ({ size, color }) => <Ionicons name="wallet" size={size} color={color} />,
     },
+    {
+      title: 'Members Payment',
+      value: isLoading ? '...' : formatCurrency(data?.totalPaid ?? 0),
+      subtitle: 'Total collected',
+      gradientColors: ['#0d9488', '#14b8a6'],
+      icon: ({ size, color }) => <Ionicons name="cash" size={size} color={color} />,
+    },
+    {
+      title: 'After Deduction',
+      value: isLoading
+        ? '...'
+        : (data?.netBalance ?? 0) >= 0
+        ? `+${formatCurrency(data?.netBalance ?? 0)}`
+        : `-${formatCurrency(Math.abs(data?.netBalance ?? 0))}`,
+      subtitle: (data?.netBalance ?? 0) >= 0 ? 'Surplus / Advance' : 'Deficit / Due',
+      gradientColors: (data?.netBalance ?? 0) >= 0 ? ['#059669', '#34d399'] : ['#e11d48', '#f43f5e'],
+      icon: ({ size, color }) => (
+        <Ionicons
+          name={(data?.netBalance ?? 0) >= 0 ? 'trending-up' : 'trending-down'}
+          size={size}
+          color={color}
+        />
+      ),
+    },
   ], [data, isLoading, currentMonthName]);
 
   const notices = data?.recentNotices || [];
@@ -111,10 +135,6 @@ export default function HomeScreen() {
                 <Text style={styles.headerSubtitle}>{currentMonthName} {currentYear}</Text>
               </View>
             </View>
-            <View style={styles.liveIndicator}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>SYNCED</Text>
-            </View>
           </View>
 
           {/* Quick Services — Dedicated Resident Hub */}
@@ -143,11 +163,11 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/market')}
               />
               <QuickServiceCard
-                icon="bed-outline"
-                label="Room Hub"
-                sublabel="Seats & capacity"
+                icon="receipt-outline"
+                label="Month Summary"
+                sublabel="Payments & balance"
                 color="#059669"
-                onPress={() => router.push('/room')}
+                onPress={() => router.push({ pathname: '/(tabs)/meals', params: { tab: 'summary' } })}
               />
               <QuickServiceCard
                 icon="people-outline"

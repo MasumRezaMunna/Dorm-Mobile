@@ -111,25 +111,55 @@ export default function DormHubScreen() {
                 title="No residents found"
               />
             ) : (
-              filteredMembers.map((m, idx) => (
-                <View key={m.memberId || idx} style={styles.residentCard}>
-                  <Avatar uri={m.photoURL} name={m.name} size={42} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.residentName}>{m.name}</Text>
-                    <View style={styles.residentMetaRow}>
-                      <View style={styles.roomTag}>
-                        <Ionicons name="bed" size={11} color="#34d399" />
-                        <Text style={styles.roomTagText}>Room {m.room?.roomNumber || 'N/A'}</Text>
+              filteredMembers.map((m, idx) => {
+                const paid = m.totalPaid ?? m.paidAmount ?? 0;
+                const afterMeal = m.afterMeal;
+
+                return (
+                  <View key={m.memberId || idx} style={styles.residentCard}>
+                    <Avatar uri={m.photoURL} name={m.name} size={42} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.residentName}>{m.name}</Text>
+                      <View style={styles.residentMetaRow}>
+                        <View style={styles.roomTag}>
+                          <Ionicons name="bed" size={11} color="#34d399" />
+                          <Text style={styles.roomTagText}>Room {m.room?.roomNumber || 'N/A'}</Text>
+                        </View>
+                        <Text style={styles.residentIdText}>ID: {m.memberId}</Text>
                       </View>
-                      <Text style={styles.residentIdText}>ID: {m.memberId}</Text>
+                      <View style={styles.residentFinanceRow}>
+                        <View style={styles.residentPaymentBadge}>
+                          <Text style={styles.residentPaymentLabel}>Paid: </Text>
+                          <Text style={styles.residentPaymentText}>{formatCurrency(paid)}</Text>
+                        </View>
+                        {afterMeal !== undefined && (
+                          <View
+                            style={[
+                              styles.residentDeductionBadge,
+                              afterMeal >= 0
+                                ? styles.residentDeductionPositive
+                                : styles.residentDeductionNegative,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.residentDeductionText,
+                                afterMeal >= 0 ? styles.textPositive : styles.textNegative,
+                              ]}
+                            >
+                              After Deduction: {afterMeal >= 0 ? `+${formatCurrency(afterMeal)}` : `-${formatCurrency(Math.abs(afterMeal))}`}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <View style={styles.residentStats}>
+                      <Text style={styles.residentMealsCount}>{m.totalMeals}</Text>
+                      <Text style={styles.residentMealsLabel}>meals</Text>
                     </View>
                   </View>
-                  <View style={styles.residentStats}>
-                    <Text style={styles.residentMealsCount}>{m.totalMeals}</Text>
-                    <Text style={styles.residentMealsLabel}>meals</Text>
-                  </View>
-                </View>
-              ))
+                );
+              })
             )}
           </>
         )}
@@ -281,6 +311,57 @@ const styles = StyleSheet.create({
   },
   roomTagText: { fontSize: 10, color: '#34d399', fontWeight: '600' },
   residentIdText: { fontSize: 11, color: Colors.dark.textDim },
+  residentFinanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+    flexWrap: 'wrap',
+  },
+  residentPaymentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  residentPaymentLabel: {
+    fontSize: 10,
+    color: Colors.dark.textDim,
+    fontWeight: '600',
+  },
+  residentPaymentText: {
+    fontSize: 11,
+    color: '#34d399',
+    fontWeight: '700',
+  },
+  residentDeductionBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  residentDeductionPositive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  residentDeductionNegative: {
+    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+    borderColor: 'rgba(244, 63, 94, 0.25)',
+  },
+  residentDeductionText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  textPositive: {
+    color: '#34d399',
+  },
+  textNegative: {
+    color: '#f43f5e',
+  },
   residentStats: { alignItems: 'center' },
   residentMealsCount: { fontSize: 15, fontWeight: '800', color: Colors.dark.text },
   residentMealsLabel: { fontSize: 10, color: Colors.dark.textDim },
